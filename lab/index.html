@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buck converter, as water — Inertance</title>
+<meta name="description" content="An interactive buck converter shown as a hydraulic circuit: pressure is voltage, flow is current, inertia is inductance. Live waveforms alongside.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<style>
+:root{
+  color-scheme: light dark;
+  --background:#ffffff; --foreground:#16232b;
+  --border:#d3dfe6; --muted:#5d7480;
+  --popover:#16232b; --popover-foreground:#f2f7f9;
+  --viz-series-1:#0c6c9e; --accent:#0c6c9e;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --background:#0c151a; --foreground:#e3eef3;
+    --border:#273941; --muted:#8ba2ac;
+    --popover:#e3eef3; --popover-foreground:#0c151a;
+    --viz-series-1:#57b4e4; --accent:#57b4e4;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--background); color:var(--foreground);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.55;
+}
+.page{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:24px 64px}
+
+/* utility classes the fragment expects from its host harness */
+.btn{
+  font:inherit; padding:6px 14px; border:1px solid var(--border);
+  background:var(--background); color:var(--foreground); border-radius:3px; cursor:pointer;
+}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.form-control,.form-select{
+  font:inherit; padding:5px 8px; border:1px solid var(--border); border-radius:3px;
+  background:var(--background); color:var(--foreground); max-width:100%;
+}
+.form-range{width:100%;accent-color:var(--accent)}
+.form-check{display:flex;align-items:center;gap:7px;margin:5px 0}
+.form-check-input{accent-color:var(--accent);width:15px;height:15px}
+.text-small{font-size:13px;color:var(--muted)}
+.tabular-nums{font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+label{display:block;font-size:13px}
+summary{cursor:pointer}
+a{color:var(--accent)}
+
+/* buck-only demo: the topology picker is removed */
+#cl-type{display:none}
+#cl-type-label{display:none}
+
+.masthead{border-bottom:1px solid var(--border);margin-bottom:22px;padding-bottom:16px;
+  display:flex;flex-wrap:wrap;gap:10px 20px;align-items:baseline;justify-content:space-between}
+.masthead h1{font-size:20px;margin:0;font-weight:600;letter-spacing:-.01em}
+.masthead .sub{font-size:13.5px;color:var(--muted);margin:3px 0 0}
+.masthead a.home{font-size:13px;text-decoration:none}
+.masthead a.home:hover{text-decoration:underline}
+.caveat{
+  margin-top:32px;padding:14px 16px;border:1px solid var(--border);border-left:3px solid var(--accent);
+  font-size:13.5px;color:var(--muted);max-width:74ch;border-radius:0 3px 3px 0;
+}
+.caveat strong{color:var(--foreground);font-weight:600}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="masthead">
+  <div>
+    <h1>Buck converter, as water</h1>
+    <p class="sub">Pressure is voltage · flow is current · inertia is inductance · the spring-loaded piston is capacitance</p>
+  </div>
+  <a class="home" href="../">← Inertance</a>
+</header>
+<div id="circuit-lab">
+<style>
+#circuit-lab{position:relative;color:var(--foreground)}#circuit-lab .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}#circuit-lab .plots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}#circuit-lab .plot{min-width:0}#circuit-lab .plot svg{display:block;width:100%;height:170px}#circuit-lab .plot text{fill:var(--foreground);font-size:12px}#circuit-lab .water{width:100%;display:block;background:white}#circuit-lab .water text{font-family:system-ui;fill:black;font-size:15px}#circuit-lab .legend{background:none;border:0;color:var(--foreground);cursor:pointer;padding:4px}#circuit-lab .legend[aria-pressed=false]{opacity:.4}#circuit-lab #cl-ref::first-letter{color:var(--viz-series-1)}#circuit-lab .tip{position:absolute;pointer-events:none;background:var(--popover);color:var(--popover-foreground);padding:8px;z-index:3;max-width:260px}#circuit-lab .note{margin:8px 0}#circuit-lab .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}#circuit-lab .fields label{min-width:0}#circuit-lab .fields input{max-width:100%;box-sizing:border-box}#circuit-lab .calculation{overflow-wrap:anywhere}#circuit-lab .water text.value{fill:#245d88}@media(max-width:600px){#circuit-lab .plots{grid-template-columns:1fr}}
+</style>
+<div class="controls"><label>Circuit <select class="form-select" id="cl-type"></select></label><button class="btn" id="cl-play">Pause</button><button class="btn" id="cl-panel-toggle" aria-expanded="false" aria-controls="cl-panel">Controls</button><span id="cl-regime"></span><label>Input feed <select class="form-select" id="cl-feed"><option value="0">Ideal source · Cᵢ held fixed</option><option value="0.5" selected>0.5 Ω · Cᵢ buffers ripple</option></select></label></div>
+<div id="cl-panel" hidden>
+<div class="fields">
+<label>Input (V)<input class="form-control" id="cl-vs" type="number" min="1" max="48" step="1" value="12"></label>
+<label>L / Lₘ (mH)<input class="form-control" id="cl-L" type="number" min="0.2" max="50" step="0.1" value="4.7"></label>
+<label>Cᵢ (µF)<input class="form-control" id="cl-Ci" type="number" min="100" max="10000" step="100" value="2200"></label>
+<label class="split-control" hidden>C₁ split bus (µF)<input class="form-control" id="cl-C1" type="number" min="22" max="10000" step="1" value="220"></label>
+<label class="split-control" hidden>C₂ split bus (µF)<input class="form-control" id="cl-C2" type="number" min="22" max="10000" step="1" value="220"></label>
+<label>Cₒ (µF)<input class="form-control" id="cl-Co" type="number" min="22" max="2200" step="22" value="220"></label>
+<label>Load (Ω)<input class="form-control" id="cl-R" type="number" min="2" max="100" step="1" value="12"></label>
+<label>Switching (kHz)<input class="form-control" id="cl-f" type="number" min="1" max="20" step="0.5" value="2"></label>
+<label>Turns n = Nₛ/Nₚ<input class="form-control" id="cl-n" type="number" min="0.25" max="4" step="0.25" value="1"></label>
+<label>Switch path R (mΩ)<input class="form-control" id="cl-rq" type="number" min="0" max="1000" step="10" value="80"></label>
+<label>Winding R (mΩ)<input class="form-control" id="cl-rL" type="number" min="0" max="2000" step="10" value="120"></label>
+<label>Diode drop (V)<input class="form-control" id="cl-vd" type="number" min="0" max="2" step="0.05" value="0.55"></label>
+<label>Cₒ ESR (mΩ)<input class="form-control" id="cl-esr" type="number" min="0" max="1000" step="10" value="40"></label>
+<label>Duty (%)<input class="form-control" id="cl-duty" type="number" min="10" max="85" step="1" value="50"></label>
+
+<label>Playback <select class="form-select" id="cl-speed"><option value="4">Slow</option><option value="2" selected>Normal</option><option value="1">Fast</option><option value="0.5">Very fast</option></select></label>
+<label>Capacitor travel <output id="cl-gainval">3× visual</output><input class="form-range" id="cl-gain" type="range" min="1" max="8" step="0.5" value="3"></label>
+<label>Particle travel <output id="cl-flowval">1×</output><input class="form-range" id="cl-flow" type="range" min="0.25" max="2" step="0.25" value="1"></label>
+<label>Pressure contrast <output id="cl-contrastval">1×</output><input class="form-range" id="cl-contrast" type="range" min="0.5" max="2" step="0.25" value="1"></label>
+</div>
+<div class="controls"><label class="form-check"><input class="form-check-input" id="cl-values" type="checkbox" checked> Values on circuit</label><label class="form-check"><input class="form-check-input" id="cl-color" type="checkbox" checked> Pressure color</label><label class="form-check"><input class="form-check-input" id="cl-gray" type="checkbox" checked> Gray inactive paths</label><label class="form-check"><input class="form-check-input" id="cl-loss" type="checkbox"> Conduction losses</label><label class="form-check"><input class="form-check-input" id="cl-calcs" type="checkbox" checked> Signal calculations</label><label class="form-check"><input class="form-check-input" id="cl-levels" type="checkbox" checked> Mark min / mean / max</label></div>
+<button class="btn" id="cl-apply">Apply component values</button>
+</div>
+<div id="cl-error" role="alert" hidden></div>
+<svg class="water" viewBox="0 0 1200 500" role="img" aria-label="Animated water circuit"><defs id="cl-defs"></defs><g id="cl-pipes"></g><g id="cl-parts"></g><g id="cl-labels"></g></svg>
+<div class="note tabular-nums" id="cl-state"></div><div class="text-small" id="cl-scaling"></div><div class="text-small" id="cl-input-note"></div>
+<div id="cl-momentum" class="note tabular-nums"></div><div id="cl-power" class="text-small"></div>
+<label>Time <output id="cl-time" class="tabular-nums"></output><input class="form-range" id="cl-scrub" type="range" min="0" max="1000" value="0" step="1" style="width:100%"></label>
+<div class="note calculation" id="cl-transfer"></div>
+<div class="controls"><button class="legend" id="cl-ref" aria-pressed="true">━ Textbook · CCM, ripple neglected</button><button class="legend" id="cl-sim" aria-pressed="true">━ Simulated · finite L/C</button><label class="form-check"><input class="form-check-input" id="cl-zoom" type="checkbox"> Zoom capacitor voltage ripple</label></div>
+<div class="plots" id="cl-plots"></div><div class="tip" role="tooltip" hidden></div>
+<details><summary>Model &amp; scaling</summary><div class="text-small">Steady-period switched state models; zero-current diode blocking included. Coupled inductors in the ideal-coupling limit: bridge excitation current is neglected; flyback magnetizing current is explicitly simulated. No leakage or saturation. Half bridge integrates split-capacitor charge with a variable midpoint and solves a periodic boundary; startup and midpoint stability are not yet simulated. The center-tapped secondary uses one housing with separate paddle sectors and particles for the winding currents. Restored gears illustrate coupling ratio; the paddle sectors and flyback storage links represent the additional freedom needed for circulating current and energy storage, not a fully derived gearbox. Bridge timing follows the course: alternating pulses of length DT, complete magnetic period 2T. Optional losses are lumped conduction resistance and diode drop, not transistor switching transients. Flyback shows a separate magnetizing inertia wheel with input/output power links that engage during their conducting intervals. The dashed links are a power-flow explanation, not a fully derived mechanical gearbox. A rigid transformer gear alone cannot store its energy. Pressure is 100 Pa/V; shading interpolates between port pressures. Water geometry is schematic, not a CFD solution. All plots use the physical state, independently of visual amplification.</div></details><span id="cl-announce" class="sr-only" aria-live="polite"></span>
+</div>
+
+
+<script>
+/* SI-unit, topology-specific switched state model. No visual gains enter this solver. */
+(function(g){
+const names={buck:'Buck',boost:'Boost',inverting:'Buck–boost · inverting',noninverting:'Buck–boost · two switches',flyback:'Flyback',half:'Half bridge · buck type',fullbuck:'Full bridge · buck type',fullboost:'Full bridge · boost type'};
+const defaults={vs:12,L:.0047,Ci:.0022,C1:.00022,C2:.00022,Co:.00022,R:12,f:2000,duty:.5,n:1,rs:0,losses:false,rq:.08,rL:.12,vd:.55,esr:.04};
+function simulate(options={}){
+ const p={...defaults,...options},type=p.type||'buck',bridge=['half','fullbuck','fullboost'].includes(type),sign=type==='inverting'?-1:1,N=options.steps||400,dt=1/p.f/N,edge=Math.round(p.duty*N),end=4/p.f;
+ if(!names[type]||![p.vs,p.L,p.Ci,p.C1,p.C2,p.Co,p.R,p.f,p.n].every(x=>Number.isFinite(x)&&x>0)||p.duty<.1||p.duty>.85)throw Error('Values must be positive; duty must be 10–85%.');
+ const stages=k=>({on:k%N<edge,pol:Math.floor(k/N)%2===0?1:-1});
+ function coeff(st){const on=st.on;switch(type){case'buck':return[on?1:0,1];case'boost':return[1,on?0:1];case'inverting':case'noninverting':return[on?1:0,on?0:1];case'flyback':return[on?1:0,on?0:1/p.n];case'fullboost':return[1,on?0:1/p.n];default:return[on?p.n*(type==='half'?.5:1):0,1];}}
+ function values(s,st){let [a,b]=coeff(st);const vi=p.rs?s[0]:p.vs,i=Math.max(0,s[1]),esr=p.losses?p.esr:0,rL=p.losses?p.rL:0,rq=p.losses?p.rq:0,vd=p.losses?p.vd:0;const out=(s[2]+esr*b*i)/(1+esr/p.R),lossR=rq*(type==='fullboost'?(st.on?1:2):type==='fullbuck'?(st.on?2*p.n*p.n:0):type==='half'?(st.on?p.n*p.n:0):type==='noninverting'?(st.on?2:0):(st.on?1:0)),lossV=vd*(type==='half'||type==='fullbuck'?1:type==='noninverting'?(!st.on?2:0):(!st.on?b:0));const vc2=type==='half'?s[3]:vi/2,vc1=vi-vc2;if(type==='half')a=st.on?p.n*(st.pol>0?vc1:vc2)/vi:0;let vl=a*vi-b*out-lossR*i-lossV;const idle=i<1e-9&&vl<=0;if(idle){a=0;b=0;vl=0;}
+ const output=b*i,load=out/p.R,icoMag=output-load,vo=sign*out,ip=type==='flyback'?(st.on?i:0):bridge?(type==='fullboost'?(st.on?0:st.pol*i):(st.on?st.pol*p.n*i:0)):0;
+ // Split-bus KCL: (C1+C2) dvm = C1 dvi + ip.
+ // Eliminate midpoint derivative at the bus: Ceq=C1*C2/(C1+C2).
+ const alpha=p.C1/(p.C1+p.C2),ceq=p.C1*p.C2/(p.C1+p.C2),qtop=st.on&&st.pol>0?p.n*i:0;
+ const demand=type==='half'?qtop-alpha*ip:a*i,is=p.rs?(p.vs-vi)/p.rs:demand;
+ const dvi=p.rs?(is-demand)/(p.Ci+(type==='half'?ceq:0)):0;
+ const dvm=type==='half'?(p.C1*dvi+ip)/(p.C1+p.C2):dvi/2;
+ const ic1=type==='half'?p.C1*(dvi-dvm):0,ic2=type==='half'?p.C2*dvm:0;
+ const input=type==='half'?qtop+ic1:a*i;
+ const id=type==='buck'?(!st.on?i:0):bridge?(type==='fullboost'?(st.on?0:i/p.n):(st.on?i:i/2)):(!st.on?b*i:0);
+ let sw=type==='buck'?(st.on?vi-rq*i:idle?out:-vd):type==='boost'?(st.on?rq*i:idle?vi:out+vd):['inverting','noninverting'].includes(type)?(st.on?vi:idle?0:-out):0;
+ let vp=bridge?(type==='fullboost'?(st.on?0:st.pol*(out+vd)/p.n):(st.on?st.pol*((type==='half'?(st.pol>0?vc1:vc2):vi)-rq*p.n*i*(type==='half'?1:2)):0)):type==='flyback'?vl:0;
+ if(type==='fullboost')sw=st.on?rq*i:idle?vi:(out+vd)/p.n+2*rq*i;
+ let vq=type==='buck'||type==='inverting'?vi-sw:type==='boost'?sw:type==='flyback'?(st.on?rq*i:vi+(out+vd)/p.n):type==='noninverting'?(st.on?rq*i:vi):type==='half'?(st.on?(st.pol>0?0:vi):vi/2):(st.on=== (type!=='fullboost')?(st.pol>0?0:vi):type==='fullboost'?0:vi/2);
+ let vdi=type==='buck'?-sw:type==='boost'?sw-out:type==='inverting'?vo-sw:type==='flyback'?(st.on?-p.n*vi-out:idle?0:vd):type==='noninverting'?(st.on?-out:vd):0;
+ let d1=bridge?(type==='fullboost'?(st.on?0:st.pol>0?i/p.n:0):(st.on?(st.pol>0?i:0):i/2)):id,d2=bridge?(type==='fullboost'?(st.on?0:st.pol<0?i/p.n:0):(st.on?(st.pol<0?i:0):i/2)):type==='noninverting'?(!st.on?i:0):0;
+ if(type==='fullboost')vq=st.on?rq*i/2:st.pol>0?rq*i:sw-rq*i;if(type==='fullbuck'||type==='half')vq=st.on?(st.pol>0?rq*p.n*i:vi-rq*p.n*i):vi/2;if(type==='half'&&!st.on)vq=vc1;if(idle&&type==='fullboost')vp=st.pol*vi;
+ if(bridge)vdi=p.n*vp-(type==='fullboost'?out:idle?out:Math.abs(p.n*vp)-vd);if(type==='flyback'){vdi=-p.n*vp-out;if(idle)vq=vi;}if(type==='noninverting'){vq=st.on?rq*i:idle?vi:vi+vd;vdi=(st.on?rq*i:idle?0:out+vd)-out;}
+ const q1=bridge?(type==='fullboost'?(st.on?i/2:st.pol>0?i:0):(st.on&&st.pol>0?p.n*i:0)):(st.on?i:0),q2=bridge?(type==='fullboost'?(st.on?i/2:st.pol<0?i:0):(st.on&&st.pol<0?p.n*i:0)):type==='noninverting'?q1:0;
+ return{vi,vc1,vc2,ic1,ic2,dvm,dvi,splitEnergy:type==='half'?.5*p.C1*vc1*vc1+.5*p.C2*vc2*vc2:0,i,vc:sign*s[2],out,vo,ir:sign*load,ico:sign*icoMag,ici:is-input,is,input,output,iq:q1,id:d1,q1,q2,q3:q2,q4:q1,d1,d2,ip,sec:bridge?d1-d2:type==='flyback'?output:0,vl,vq,vd:vdi,vp,sw,left:idle?0:st.on?vi-rq*i:-vd,right:idle?0:st.on?rq*i:out+vd,rect:bridge?(type==='fullboost'?out:idle?out:Math.abs(p.n*vp)-vd):sw,on:st.on,pol:st.pol,idle,di:(vl-rL*i)/p.L,dvc:icoMag/p.Co};
+ }
+ function step(s,st,h=dt){const f=x=>{const v=values(x,st);return type==='half'?[v.dvi,v.idle?0:v.di,v.dvc,v.dvm]:[v.dvi,v.idle?0:v.di,v.dvc];},a=f(s),b=f(s.map((v,j)=>v+a[j]*h/2)),c=f(s.map((v,j)=>v+b[j]*h/2)),d=f(s.map((v,j)=>v+c[j]*h));const z=s.map((v,j)=>v+h*(a[j]+2*b[j]+2*c[j]+d[j])/6);z[1]=Math.max(0,z[1]);return z;}
+ const ratio=type==='buck'?p.duty:type==='boost'?1/(1-p.duty):['inverting','noninverting'].includes(type)?p.duty/(1-p.duty):type==='flyback'?p.n*p.duty/(1-p.duty):type==='fullboost'?p.n/(1-p.duty):p.n*p.duty*(type==='half'?.5:1);
+ let s=[p.vs,Math.max(.01,p.vs*ratio/p.R/(type==='boost'||type==='fullboost'?1-p.duty:1)),p.vs*ratio],error=Infinity,cycles=0;if(type==='half')s.push(p.vs*(options.initialMidpointFraction??.5));
+ // Solve the half-bridge periodic boundary directly: the ideal midpoint can
+ // settle extremely slowly under repeated time marching. This is not a startup run.
+ if(type==='half'){
+  const indices=p.rs?[0,1,2,3]:[1,2,3];
+  const residual=x=>{let y=[...x];for(let k=0;k<N*2;k++)y=step(y,stages(k));return indices.map(j=>y[j]-x[j]);};
+  for(;cycles<20;cycles++){
+   const r=residual(s);error=Math.max(...r.map(Math.abs));if(error<1e-9)break;
+   const columns=indices.map(j=>{const x=[...s],eps=1e-5*Math.max(1,Math.abs(x[j]));x[j]+=eps;return residual(x).map((v,k)=>(v-r[k])/eps);});
+   const A=r.map((v,k)=>[...columns.map(col=>col[k]),-v]),size=indices.length;
+   for(let k=0;k<size;k++){let pivot=k;for(let j=k+1;j<size;j++)if(Math.abs(A[j][k])>Math.abs(A[pivot][k]))pivot=j;[A[k],A[pivot]]=[A[pivot],A[k]];if(Math.abs(A[k][k])<1e-12)throw Error('Half-bridge periodic midpoint is underdetermined.');const d=A[k][k];for(let j=k;j<=size;j++)A[k][j]/=d;for(let row=0;row<size;row++)if(row!==k){const f=A[row][k];for(let j=k;j<=size;j++)A[row][j]-=f*A[k][j];}}
+   let accepted=false;for(let damping=1;damping>=1/128;damping/=2){const next=[...s];indices.forEach((j,k)=>next[j]+=damping*A[k][size]);next[1]=Math.max(0,next[1]);if(next[2]<0||next[3]<=0||next[3]>=next[0])continue;if(Math.max(...residual(next).map(Math.abs))<error){s=next;accepted=true;break;}}
+   if(!accepted)throw Error('Half-bridge periodic solution did not converge for these values.');
+  }
+ }else
+ for(;cycles<4000;cycles++){const prev=[...s];for(let k=0;k<N*2;k++)s=step(s,stages(k));error=Math.max(...s.map((v,j)=>Math.abs(v-prev[j])));if(!s.every(Number.isFinite)||Math.abs(s[2])>1e6)throw Error('This combination is outside the supported model range.');if(error<1e-8)break;}
+ if(error>1e-5)throw Error('Steady state did not settle. Try a larger load or capacitance.');
+ const keys=['i','is','input','output','ici','ico','ir','iq','id','q1','q2','q3','q4','d1','d2','ip','sec','ic1','ic2'],charge=Object.fromEntries(keys.map(k=>[k,0])),samples=[];
+ for(let k=0;k<=N*4;k++){const st=stages(k),v=values(s,st);samples.push({...v,s:[...s],t:k*dt,charge:{...charge}});if(k===N*4)break;const next=step(s,st),w=values(next,st);keys.forEach(key=>charge[key]+=(v[key]+w[key])*dt/2);s=next;}
+ const statistics={},numeric=Object.keys(samples[0]).filter(k=>typeof samples[0][k]==='number'&&k!=='t');numeric.forEach(key=>statistics[key]={min:Infinity,max:-Infinity,integral:0});
+ for(let k=0;k<samples.length-1;k++){const a=samples[k],b={...values(samples[k+1].s,{on:a.on,pol:a.pol}),t:samples[k+1].t};for(const key of numeric){const st=statistics[key];for(const v of[a,b]){if(v[key]<st.min){st.min=v[key];st.minPoint=v;}if(v[key]>st.max){st.max=v[key];st.maxPoint=v;}}st.integral+=(a[key]+b[key])*dt/2;}}
+ const means={};numeric.forEach(key=>{statistics[key].mean=statistics[key].integral/end;means[key]=statistics[key].mean;});
+ function at(t){const u=Math.min(N*4,Math.max(0,t/dt)),k=Math.min(samples.length-2,Math.floor(u)),f=u-k,a=samples[k],b=samples[k+1];return {...values(a.s.map((v,j)=>v+(b.s[j]-v)*f),stages(Math.floor(u+1e-7))),charge:Object.fromEntries(keys.map(key=>[key,a.charge[key]+f*(b.charge[key]-a.charge[key])]))};}
+ return{p:{...p,type},samples,values,at,mean:k=>means[k],means,statistics,duration:end,dt,error,cycles,ratio,bridge,sign,regime:samples.some(v=>v.idle)?'DCM':'CCM'};
+}
+if(typeof module!=='undefined')module.exports={simulate,names,defaults};else g.CircuitModel={simulate,names,defaults};
+})(globalThis);
+
+(()=>{
+const root=document.getElementById('circuit-lab'),$=s=>root.querySelector(s),NS='http://www.w3.org/2000/svg';
+const el=(tag,a={},parent)=>{const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(a))n.setAttribute(k,v);if(parent)parent.appendChild(n);return n};
+let model,t=0,turns=0,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,charts=[],showRef=true,showSim=true,pressureLabel,pressureMax=24,pressureMin=0;
+const powerLinks=[],pipes=[],caps=[],rotors=[],switches=[],diodes=[],gears=[],valueLabels=[],parts=$('#cl-parts'),labels=$('#cl-labels');
+function text(x,y,s){const n=el('text',{x,y,'text-anchor':'middle'},labels);n.textContent=s;return n;}
+function pipe(d,key,p0,p1,width=12){const g=el('g',{},$('#cl-pipes'));el('path',{d,fill:'none',stroke:'white','stroke-width':width+8,'stroke-linejoin':'round'},g);const outline=el('path',{d,fill:'none',stroke:'black','stroke-width':width+3,'stroke-linejoin':'round'},g),inner=el('path',{d,fill:'none',stroke:'#49a6ec','stroke-width':width,'stroke-linejoin':'round'},g);const len=inner.getTotalLength(),dots=[],segments=[];if(p0!==p1){for(let j=0;j<24;j++){let d='';for(let z=0;z<=4;z++){const pt=inner.getPointAtLength(len*(j+z/4)/24);d+=(z?' L':'M')+pt.x+' '+pt.y;}segments.push(el('path',{d,fill:'none',stroke:'#73baf0','stroke-width':width+.1},g));}}const spacing=22*12/width;for(let k=0;k<Math.ceil(len/spacing);k++)dots.push(el('circle',{r:Math.min(2,width*.22),fill:'#eaf8ff'},g));pipes.push({g,inner,outline,len,dots,key,p0,p1,width,spacing,segments});return g;}
+function springPath(x,a,b){let d=`M${x} ${a}`;for(let i=1;i<=8;i++)d+=` L${x+(i===8?0:i%2?6:-6)} ${a+(b-a)*i/8}`;return d;}
+// One indexed spoke makes rotation observable even when repeated blades alias.
+function registerRotor(rot,cx,cy,r,key,scale=1,inertia=false){
+ rot.setAttribute('data-rotor',key);
+ el('line',{x1:cx+Math.min(18,r*.5),y1:cy,x2:cx+r-3,y2:cy,stroke:'#075e9d','stroke-width':5,'stroke-linecap':'round'},rot);
+ el('circle',{cx:cx+r-3,cy,r:3,fill:'white',stroke:'#075e9d','stroke-width':1.5},rot);
+ const arrow=el('path',{d:`M${cx+r-8} ${cy+8} a${r-8} ${r-8} 0 0 1 ${-r+8} ${r-16}`,fill:'none',stroke:'#075e9d','stroke-width':2},parts);
+ const tip=el('path',{d:`M${cx+6} ${cy+r-13} L${cx} ${cy+r-8} L${cx+6} ${cy+r-3}`,fill:'none',stroke:'#075e9d','stroke-width':2},parts);
+ const energy=inertia?el('circle',{cx,cy,r:14,fill:'none',stroke:'#0784cf','stroke-width':4,'stroke-dasharray':'0 88',transform:`rotate(-90 ${cx} ${cy})`},parts):null;
+ rotors.push({rot,cx,cy,r,key,scale,arrow,tip,energy});
+}
+const pressure=v=>$('#cl-color').checked?`hsl(207 85% ${88-48*Math.max(0,Math.min(1,((v-pressureMin)/(pressureMax-pressureMin))*+$('#cl-contrast').value))}%)`:'#73baf0';
+function reference(v){const p=model.p,D=p.duty,vi=model.mean('vi'),out=vi*model.ratio,io=out/p.R,sg=model.sign,bridge=model.bridge;let i=model.p.type==='buck'||['half','fullbuck'].includes(p.type)?io:p.type==='flyback'||p.type==='fullboost'?p.n*io/(1-D):io/(1-D),on=v.on,a,b;
+ switch(p.type){case'buck':a=on?1:0;b=1;break;case'boost':a=1;b=on?0:1;break;case'inverting':case'noninverting':a=on?1:0;b=on?0:1;break;case'flyback':a=on?1:0;b=on?0:1/p.n;break;case'fullboost':a=1;b=on?0:1/p.n;break;default:a=on?p.n*(p.type==='half'?.5:1):0;b=1;}
+ // Ideal algebra, independent of the optional conduction losses.
+ const vp=bridge?(p.type==='fullboost'?(on?0:v.pol*out/p.n):(on?v.pol*vi*(p.type==='half'?.5:1):0)):p.type==='flyback'?a*vi-b*out:0;
+ const vq=p.type==='buck'?(on?0:vi):p.type==='boost'?(on?0:out):p.type==='inverting'?(on?0:vi+out):p.type==='noninverting'?(on?0:vi):p.type==='flyback'?(on?0:vi+out/p.n):p.type==='half'?(on?(v.pol>0?0:vi):vi/2):p.type==='fullboost'?(on?0:v.pol>0?0:out/p.n):(on?(v.pol>0?0:vi):vi/2);
+ const vd=p.type==='buck'?(on?-vi:0):['boost','noninverting'].includes(p.type)?(on?-out:0):p.type==='inverting'?(on?-out-vi:0):p.type==='flyback'?(on?-p.n*vi-out:0):p.n*vp-Math.abs(p.n*vp);
+ const d1=bridge?(p.type==='fullboost'?(on?0:v.pol>0?i/p.n:0):(on?(v.pol>0?i:0):i/2)):p.type==='buck'?(!on?i:0):(!on?b*i:0);
+ return {vc1:vi/2,vc2:vi/2,ic1:bridge&&p.type==='half'?(on?(v.pol>0?-1:1)*p.n*i*p.C1/(p.C1+p.C2):0):0,ic2:bridge&&p.type==='half'?(on?(v.pol>0?1:-1)*p.n*i*p.C2/(p.C1+p.C2):0):0,d1,d2:bridge?(p.type==='fullboost'?(on?0:v.pol<0?i/p.n:0):(on?(v.pol<0?i:0):i/2)):0,vi,vo:sg*out,vl:a*vi-b*out,vq,vd,i,ici:p.rs?(model.mean('input')-a*i):0,ico:sg*(b*i-io),iq:bridge?(p.type==='fullboost'?(on?i/2:v.pol>0?i:0):(on&&v.pol>0?p.n*i:0)):(on?i:0),id:d1,vp,ip:bridge?(p.type==='fullboost'?(on?0:v.pol*i):(on?v.pol*p.n*i:0)):on?i:0};
+}
+function transfer(){const p=model.p,v=model.mean('vi'),D=p.duty,n=p.n,f=x=>Number(x).toFixed(3);const expressions={buck:['D·Vᵢ',`${f(D)} × ${f(v)}`],boost:['Vᵢ/(1−D)',`${f(v)} / (1−${f(D)})`],inverting:['−D·Vᵢ/(1−D)',`−${f(D)} × ${f(v)} / (1−${f(D)})`],noninverting:['D·Vᵢ/(1−D)',`${f(D)} × ${f(v)} / (1−${f(D)})`],flyback:['n·D·Vᵢ/(1−D)',`${f(n)} × ${f(D)} × ${f(v)} / (1−${f(D)})`],half:['n·D·Vᵢ/2',`${f(n)} × ${f(D)} × ${f(v)} / 2`],fullbuck:['n·D·Vᵢ',`${f(n)} × ${f(D)} × ${f(v)}`],fullboost:['n·Vᵢ/(1−D)',`${f(n)} × ${f(v)} / (1−${f(D)})`]};const[e,num]=expressions[p.type];return `Textbook CCM: Vₒ ≈ ${e} = ${num} = ${f(model.sign*model.ratio*v)} V. Simulated mean: ${f(model.mean('vo'))} V.`;}
+function formula(key,v){const p=model.p,f=x=>Number(x).toFixed(3),ref=reference(v);
+if(key==='vc1')return `V_C₁ = Vᵢ − Vmid = ${f(v.vi)} − ${f(v.vc2)} = ${f(v.vc1)} V; dV_C₁/dt = i_C₁/C₁`;
+if(key==='vc2')return `V_C₂ = Vmid = ${f(v.vc2)} V; dV_C₂/dt = i_C₂/C₂`;
+if(key==='ic1')return `i_C₁ = C₁(dVᵢ/dt − dVmid/dt) = ${p.C1} × (${f(v.dvi)} − ${f(v.dvm)}) = ${f(v.ic1)} A`;
+if(key==='ic2')return `i_C₂ = i_C₁ + i_primary = ${f(v.ic1)} + ${f(v.ip)} = ${f(v.ic2)} A`;
+if(key==='d1'||key==='d2')return `${key==='d1'?'i_S₁':'i_S₂'} = ${f(v[key])} A; i_S₁ + i_S₂ = ${f(v.d1+v.d2)} A; net referred current n(i_S₁−i_S₂) = ${f(p.n*(v.d1-v.d2))} A`;
+const qDrain=p.type==='boost'?v.sw:p.type==='fullboost'?v.sw:v.vi,qSource=p.type==='boost'?0:p.type==='buck'||p.type==='inverting'||p.type==='flyback'?v.sw:p.type==='noninverting'?v.left:v.pa,diodeA=p.type==='buck'?0:p.type==='inverting'?v.vo:p.type==='flyback'?v.secv:model.bridge?v.s1:p.type==='noninverting'?v.right:v.sw,diodeK=p.type==='buck'||p.type==='inverting'?v.sw:model.bridge?v.rect:v.out;const text={vi:`V_Cᵢ(t) = V_Cᵢ(0) + ∫i_Cᵢ dt / Cᵢ = ${f(v.vi)} V`,vo:`V_Cₒ(t) = V_C(0) + ∫i_C dt / Cₒ + R_ESR·i_C = ${f(v.vo)} V`,i:`i_L(t) = i_L(0) + ∫(v_L − R_L·i_L)dt / L = ${f(v.i)} A`,vl:`v_L = L·di_L/dt + R_L·i_L = ${f(p.L)} × ${f(v.di)} + ${f(p.losses?p.rL:0)} × ${f(v.i)} = ${f(v.vl)} V`,ici:`i_Cᵢ = i_source − i_input = ${f(v.is)} − ${f(v.input)} = ${f(v.ici)} A`,ico:`i_Cₒ = ${model.sign<0?'−':''}i_delivered − Vₒ/R = ${f(model.sign*v.output)} − ${f(v.vo)}/${f(p.R)} = ${f(v.ico)} A`,iq:`i_Q₁ = ${f(v.iq)} A; textbook in this phase: ${f(ref.iq)} A`,id:`i_D₁ = ${f(v.id)} A; textbook in this phase: ${f(ref.id)} A`,vq:`v_Q₁ = v_drain − v_source = ${f(qDrain)} − ${f(qSource)} = ${f(v.vq)} V`,vd:`v_D₁ = v_anode − v_cathode = ${f(diodeA)} − ${f(diodeK)} = ${f(v.vd)} V`,vp:`v_primary = ${f(v.vp)} V; v_secondary = n·v_primary = ${f(p.n)} × ${f(v.vp)} = ${f(p.n*v.vp)} V`,ip:`i_primary = ${f(v.ip)} A${p.type==='flyback'?' (primary conducts only during Q ON)':`; n·(i_D₁−i_D₂) = ${f(p.n)} × (${f(v.d1)}−${f(v.d2)}) = ${f(p.n*(v.d1-v.d2))} A`}`};return text[key]||'';}
+function prepareValues(v){const p=model.p,bridge=model.bridge,rq=p.losses?p.rq:0,vd=p.losses?p.vd:0,bus=p.type==='fullboost'?v.sw:v.vi;v.vs=p.vs;v.mid=p.type==='half'?v.vc2:v.vi/2;v.pa=v.on?(v.pol>0?bus-rq*p.n*v.i:rq*p.n*v.i):bus/2;if(p.type==='half'&&!v.on)v.pa=v.mid;v.pb=bus-v.pa;if(p.type==='fullboost'){v.pa=v.on?bus/2:v.pol>0?bus-rq*v.i:rq*v.i;v.pb=bus-v.pa;}if(p.type==='flyback')v.sw=v.vi-v.vl;v.secv=-p.n*v.vp;v.s1=p.n*v.vp;v.s2=-p.n*v.vp;return v;}
+function drawWater(v){prepareValues(v);const p=model.p,bridge=model.bridge;
+ const travel=+$('#cl-flow').value,gain=+$('#cl-gain').value;let capped=false;
+ for(const q of pipes){const active=Math.abs(v[q.key]||0)>1e-5;q.g.style.opacity=$('#cl-gray').checked&&!active?.22:1;const a=q.p0==='zero'?0:v[q.p0]||0,b=q.p1==='zero'?0:v[q.p1]||0;q.inner.setAttribute('stroke',pressure((a+b)/2));q.segments.forEach((n,j)=>n.setAttribute('stroke',pressure(a+(b-a)*(j+.5)/24)));const offset=((v.charge[q.key]||0)+turns*(model.samples.at(-1).charge[q.key]||0))*200000*12/q.width*travel;for(let k=0;k<q.dots.length;k++){const distance=((k*q.spacing+offset)%q.len+q.len)%q.len,pt=q.inner.getPointAtLength(distance);q.dots[k].setAttribute('cx',pt.x);q.dots[k].setAttribute('cy',pt.y);}}
+ for(const w of rotors){const angle=(v.charge[w.key]+turns*model.samples.at(-1).charge[w.key])*200000*12/14/w.r*180/Math.PI*travel*(w.scale||1);w.rot.setAttribute('transform',`rotate(${angle} ${w.cx} ${w.cy})`);
+ const direction=Math.sign(v[w.key]*w.scale);for(const n of[w.arrow,w.tip]){n.style.opacity=direction===0?0:1;n.setAttribute('transform',direction<0?`translate(${2*w.cx} 0) scale(-1 1)`:'');}
+ if(w.energy){const fraction=v.i*v.i/(model.statistics.i.max**2||1);w.energy.setAttribute('stroke-dasharray',`${88*fraction} 88`);}
+ }
+ for(const w of gears){const angle=(v.charge[w.key]+turns*model.samples.at(-1).charge[w.key])*200000*12/14/35*180/Math.PI*w.scale*travel;w.g.setAttribute('transform',`rotate(${angle} ${w.x} ${w.cy})`);}
+ for(const c of caps){const raw=(v[c.voltage]-model.mean(c.voltage))*c.C*200000*12/50*gain,shift=Math.max(-32,Math.min(32,raw));if(Math.abs(raw)>32)capped=true;const y=c.cy+shift;c.a.setAttribute('height',y-(c.cy-40));c.a.setAttribute('fill',pressure(c.p0==='zero'?0:v[c.p0]));c.b.setAttribute('y',y);c.b.setAttribute('height',c.cy+40-y);c.b.setAttribute('fill',pressure(c.p1==='zero'?0:v[c.p1]));c.wall.setAttribute('y1',y);c.wall.setAttribute('y2',y);c.spring.setAttribute('d',springPath(c.x,c.cy-39,y-4)+' '+springPath(c.x,y+4,c.cy+39));}
+ for(const link of powerLinks){const active=Math.abs(v[link.key])>1e-7&&(!model.bridge||Math.abs(v.vp)>1e-7);link.n.style.opacity=active?1:.18;link.n.setAttribute('stroke',active?'#0784cf':'#777');}
+ const energy=.5*p.L*v.i*v.i,storagePower=p.L*v.i*v.di;
+ const derivativeScale=Math.max(Math.abs(model.statistics.di.min),Math.abs(model.statistics.di.max),1);
+ const action=v.i<1e-7?'At rest':Math.abs(v.di)<1e-4*derivativeScale?'Coasting':v.di>0?'Accelerating':'Slowing · still carrying flow';
+ $('#cl-momentum').textContent=`${p.type==='flyback'?'Magnetizing inertia':'Inductor inertia'}: ${action} · E = ½Li² = ${(energy*1000).toFixed(3)} mJ · di/dt = ${(v.di/1000).toFixed(3)} A/ms`;
+ const into=p.type==='flyback'?v.vi*v.iq:model.bridge?(p.type==='fullboost'?v.vi*v.i:Math.abs(v.vp*v.ip)):v.vi*v.input;
+ const delivered=p.type==='flyback'?v.out*v.output:model.bridge?(p.type==='fullboost'?v.out*v.output:Math.abs(v.vp*v.ip)):v.out*v.output;
+ $('#cl-power').textContent=p.type==='flyback'?`Primary → storage: ${into.toFixed(3)} W · storage → secondary: ${delivered.toFixed(3)} W · dE/dt ${storagePower.toFixed(3)} W (difference includes enabled conduction losses)`:`${model.bridge?'Primary → secondary: '+delivered.toFixed(3)+' W · ':''}Stored energy ${storagePower>=0?'increasing':'decreasing'} at ${Math.abs(storagePower).toFixed(3)} W. Blue ring = E / maximum E in this run.`;
+ switches.forEach(q=>{const positive=q.key==='q1'||q.key==='q4',open=model.bridge?(p.type==='fullboost'?(v.on||(positive?v.pol>0:v.pol<0)):(v.on&&(positive?v.pol>0:v.pol<0))):v.on;q.n.setAttribute('transform',open?(q.h?'translate(0 -19)':'translate(-19 0)'):'');});diodes.forEach(q=>q.n.setAttribute('transform',Math.abs(v[q.key])>1e-7?`rotate(${q.h?(q.reverse?75:-75):-65} ${q.h?q.x:q.x-6} ${q.h?q.y-6:q.y})`:''));
+ valueLabels.forEach(n=>n.style.display=$('#cl-values').checked?'':'none');labels.querySelectorAll('text').forEach(n=>n.style.fontSize=Math.max(15,13200/root.clientWidth)+'px');pressureLabel.textContent=`Pressure scale ${pressureMin} → ${pressureMax} V · 100 Pa/V`;
+ const state=v.idle?'Zero inductor current':bridge?(p.type==='fullboost'?(v.on?'All switches ON · store energy':`Diagonal ${v.pol>0?'Q₁/Q₄':'Q₂/Q₃'} · transfer energy`):(v.on?`${v.pol>0?'Positive':'Negative'} primary pulse`:'Freewheel · output inductor carries current')):v.on?'Q ON · '+(p.type==='buck'?'supply feeds load':'store energy'):'Q OFF · stored energy feeds output';
+ $('#cl-state').textContent=`${state} · Vₒ ${v.vo.toFixed(3)} V · Iₗ ${v.i.toFixed(3)} A`;$('#cl-scaling').textContent=`Capacitor travel ${gain}× visual · particle travel ${travel}×${capped?' · travel clipped at chamber limit':''}`;
+}
+
+function addStatistics(svg,y,w,h,m,key,u,convert){if(!$('#cl-levels').checked)return;const st=model.statistics[key],levels=Math.abs(st.max-st.min)<1e-9?[{name:'min = mean = max',value:st.mean}]:[{name:'min',value:st.min},{name:'mean',value:st.mean},{name:'max',value:st.max}];levels.forEach(v=>{v.actual=y(convert(v.value));v.labelY=Math.max(m.t+13,Math.min(h-m.b-4,v.actual-5));});levels.sort((a,b)=>a.labelY-b.labelY);for(let j=1;j<levels.length;j++)levels[j].labelY=Math.max(levels[j].labelY,levels[j-1].labelY+15);if(levels.at(-1).labelY>h-m.b-4){levels.at(-1).labelY=h-m.b-4;for(let j=levels.length-2;j>=0;j--)levels[j].labelY=Math.min(levels[j].labelY,levels[j+1].labelY-15);}for(const v of levels){svg.append('line').attr('x1',m.l).attr('x2',w-m.r).attr('y1',v.actual).attr('y2',v.actual).attr('stroke','var(--foreground)').attr('opacity',.35).attr('stroke-dasharray',v.name==='mean'?'5 4':'2 4').attr('pointer-events','none');svg.append('text').attr('x',w-m.r-4).attr('y',v.labelY).attr('text-anchor','end').attr('pointer-events','none').text(v.name+' '+convert(v.value).toFixed(3)+' '+u);}}
+function statisticsCalculation(c){const st=model.statistics[c.key],T=model.duration,f=x=>Number(x).toPrecision(5),unit=c.unit,integral=(st.integral-c.mean*T)*(c.zoom?1000:1),lo=prepareValues({...st.minPoint}),hi=prepareValues({...st.maxPoint});return `Minimum: minₜ x(t) = ${f(c.convert(st.min))} ${unit} at ${(st.minPoint.t*1000).toFixed(4)} ms.
+${formula(c.key,lo)}
+Mean: (1/T)∫x(t)dt = ${f(integral)} ${unit}·s / ${f(T)} s = ${f(c.convert(st.mean))} ${unit}.
+Maximum: maxₜ x(t) = ${f(c.convert(st.max))} ${unit} at ${(st.maxPoint.t*1000).toFixed(4)} ms.
+${formula(c.key,hi)}
+Computed over four switching intervals, including both sides of switching edges; mean uses time-weighted trapezoidal integration.${c.zoom?' Min/max above are deviations from the stated voltage baseline; the substituted circuit equations use absolute volts.':''}`;}
+function envelopeExpression(c){const p=model.p,D=p.duty,vi=model.mean('vi'),vo=Math.abs(model.ratio*vi),io=vo/p.R,type=p.type,bridgeBuck=type==='half'||type==='fullbuck',a=bridgeBuck?p.n*(type==='half'?.5:1):1,avg=type==='buck'||bridgeBuck?io:(type==='flyback'||type==='fullboost'?p.n:1)*io/(1-D),rise=type==='buck'||bridgeBuck?a*vi-vo:vi,delta=rise*D/(p.L*p.f),lo=avg-delta/2,hi=avg+delta/2,b=type==='flyback'||type==='fullboost'?1/p.n:1,f=x=>Number(x).toPrecision(4);let e1,e2,min,max;
+if(['vc1','vc2','ic1','ic2'].includes(c.key))return 'Dynamic split bus: V_C₁ + V_C₂ = Vᵢ; i_C₂ − i_C₁ = i_primary. Min/max use the solved periodic waveform and the capacitor equations below; textbook overlay assumes a balanced bus.';if(c.key==='d1'||c.key==='d2')return 'Each winding carries its own current. Freewheel currents can be equal and nonzero while their net magnetic effect cancels. See simulated min/mean/max below.';
+if(model.regime!=='CCM')return 'CCM envelope expressions do not apply in DCM; use the event-aware simulated extrema below.';
+switch(c.key){
+case'i':e1='ĪL − ΔIL/2';e2='ĪL + ΔIL/2';min=lo;max=hi;break;
+case'iq':e1='0';e2=bridgeBuck?'n·(ĪL + ΔIL/2)':'ĪL + ΔIL/2';min=0;max=hi*(bridgeBuck?p.n:1);break;
+case'id':e1='0';e2=b!==1?'(ĪL + ΔIL/2)/n':'ĪL + ΔIL/2';min=0;max=hi*b;break;
+case'vl':e1=type==='buck'||bridgeBuck?'−Vₒ':type==='boost'?'Vᵢ − Vₒ':type==='fullboost'?'Vᵢ − Vₒ/n':type==='flyback'?'−Vₒ/n':'−|Vₒ|';min=type==='buck'||bridgeBuck?-vo:type==='boost'?vi-vo:type==='fullboost'?vi-vo/p.n:-vo*b;e2=type==='buck'?'Vᵢ − Vₒ':bridgeBuck?(type==='half'?'n·Vᵢ/2 − Vₒ':'n·Vᵢ − Vₒ'):'Vᵢ';max=rise;break;
+case'vq':e1='0';e2=type==='boost'?'Vₒ':type==='inverting'?'Vᵢ + |Vₒ|':type==='flyback'?'Vᵢ + Vₒ/n':type==='fullboost'?'Vₒ/n':'Vᵢ';min=0;max=type==='boost'?vo:type==='inverting'?vi+vo:type==='flyback'?vi+vo/p.n:type==='fullboost'?vo/p.n:vi;break;
+case'vd':e2='0';max=0;e1=type==='buck'?'−Vᵢ':type==='inverting'?'−Vᵢ − |Vₒ|':type==='flyback'?'−n·Vᵢ − Vₒ':type==='half'?'−n·Vᵢ':type==='fullbuck'?'−2n·Vᵢ':type==='fullboost'?'−2Vₒ':'−Vₒ';min=type==='buck'?-vi:type==='inverting'?-vi-vo:type==='flyback'?-p.n*vi-vo:type==='half'?-p.n*vi:type==='fullbuck'?-2*p.n*vi:type==='fullboost'?-2*vo:-vo;break;
+case'vo':{const ripple=type==='buck'||bridgeBuck?delta/(8*p.f*p.Co):io*D/(p.f*p.Co);e1='V̄ₒ − ΔVₒ/2';e2='V̄ₒ + ΔVₒ/2';min=model.sign*vo-ripple/2;max=model.sign*vo+ripple/2;return `CCM, small-ripple guide (absolute volts):\nVₒ,min ≈ ${e1} = ${f(min)} V; Vₒ,max ≈ ${e2} = ${f(max)} V\nΔVₒ ≈ ${type==='buck'||bridgeBuck?'ΔIL/(8fCₒ)':'IₒD/(fCₒ)'} = ${f(ripple)} V. Losses/ESR neglected.`;}
+case'vi':{const continuous=type==='boost'||type==='fullboost',dv=p.rs===0?0:continuous?delta/(8*p.f*p.Ci):a*avg*D*(1-D)/(p.f*p.Ci);return `Input-capacitor guide: Vᵢ,min ≈ V̄ᵢ − ΔVᵢ/2 = ${f(vi-dv/2)} V; Vᵢ,max ≈ V̄ᵢ + ΔVᵢ/2 = ${f(vi+dv/2)} V.\n${p.rs===0?'Ideal voltage source: ΔVᵢ = 0.':`Approximately constant source current: ΔVᵢ ≈ ${continuous?'ΔIL/(8fCᵢ)':'a·ĪL·D(1−D)/(fCᵢ)'} = ${f(dv)} V; a = ${f(a)}.`}`;}
+case'ico':if(type==='buck'||bridgeBuck){e1='IL,min − Iₒ';e2='IL,max − Iₒ';min=lo-io;max=hi-io;}else{e1=model.sign<0?'Iₒ − IL,max':'−Iₒ';e2=model.sign<0?'Iₒ':b!==1?'IL,max/n − Iₒ':'IL,max − Iₒ';min=model.sign<0?io-hi:-io;max=model.sign<0?io:b*hi-io;}break;
+case'ici':if(!p.rs)return 'Ideal source: i_Cᵢ = Cᵢ·dVᵢ/dt = 0 → min = max = 0 A.';{const continuous=type==='boost'||type==='fullboost',input=continuous?avg:D*a*avg;e1=continuous?'Īin − IL,max':'Īin − a·IL,max';e2=continuous?'Īin − IL,min':'Īin';min=input-(continuous?1:a)*hi;max=continuous?input-lo:input;}break;
+case'vp':e1=type==='flyback'?'−Vₒ/n':type==='half'?'−Vᵢ/2':type==='fullboost'?'−Vₒ/n':'−Vᵢ';e2=type==='half'?'Vᵢ/2':type==='fullboost'?'Vₒ/n':'Vᵢ';min=type==='flyback'||type==='fullboost'?-vo/p.n:type==='half'?-vi/2:-vi;max=type==='half'?vi/2:type==='fullboost'?vo/p.n:vi;break;
+case'ip':e1=type==='flyback'?'0':type==='fullboost'?'−IL,max':'−n·IL,max';e2=type==='flyback'||type==='fullboost'?'IL,max':'n·IL,max';min=type==='flyback'?0:-hi*(type==='fullboost'?1:p.n);max=hi*(type==='flyback'||type==='fullboost'?1:p.n);break;
+default:return '';
+}
+const sub=e=>e.replaceAll('IL,min',f(lo)).replaceAll('IL,max',f(hi)).replaceAll('ĪL',f(avg)).replaceAll('ΔIL',f(delta)).replaceAll('Īin',f((type==='boost'||type==='fullboost')?avg:D*a*avg)).replaceAll('Iₒ',f(io)).replaceAll('Vᵢ',f(vi)).replaceAll('Vₒ',f(vo)).replaceAll('n',f(p.n)).replaceAll('a·',f(a)+'×');
+return `CCM guide, losses neglected: min ≈ ${e1} = ${sub(e1)} = ${f(min)} ${c.unit==='mV'?'V':c.unit}; max ≈ ${e2} = ${sub(e2)} = ${f(max)} ${c.unit==='mV'?'V':c.unit}\nĪL = ${f(avg)} A; ΔIL ≈ ${type==='buck'||bridgeBuck?'(Vdrive−Vₒ)':'Vᵢ'}·D/(Lf) = ${f(rise)}×${f(D)}/(${f(p.L)}×${f(p.f)}) = ${f(delta)} A. Simulated extrema may differ.`;
+}
+
+// Diagram paths are separate from the electrical state model.
+function buildDiagram(){
+ powerLinks.length=0;pipes.length=0;caps.length=0;rotors.length=0;switches.length=0;diodes.length=0;gears.length=0;valueLabels.length=0;$('#cl-defs').replaceChildren();$('#cl-pipes').replaceChildren();parts.replaceChildren();labels.replaceChildren();
+ const p=model.p,type=p.type,iso=['flyback','half','fullbuck','fullboost'].includes(type);
+ function label(x,y,name,value){text(x,y,name);if(value){const n=text(x,y+21,value);n.classList.add('value');valueLabels.push(n);}}
+ function valve(x,y,key,name,orientation='v'){const h=orientation==='h',n=el('line',{x1:h?x:x-10,x2:h?x:x+10,y1:h?y-10:y,y2:h?y+10:y,stroke:'black','stroke-width':4},parts);switches.push({n,key,h});label(x+(h?0:-28),y+(h?35:-18),name);}
+ function diode(x,y,key,name,h=true){const n=el('line',{x1:h?x:x-6,x2:h?x:x+6,y1:h?y-6:y,y2:h?y+6:y,stroke:'black','stroke-width':3},parts);diodes.push({n,key,x,y,h});label(x+(h?0:-25),y+(h?30:0),name);}
+ function cap(x,top,bottom,key,voltage,name,C,p0=voltage,p1='zero'){const cy=(top+bottom)/2;pipe(`M${x} ${top} V${cy-42}`,key,p0,p0);pipe(`M${x} ${cy+42} V${bottom}`,key,p1,p1);const g=el('g',{'data-capacitor':name},parts);el('rect',{x:x-25,y:cy-42,width:50,height:84,fill:'white',stroke:'black','stroke-width':2},g);const a=el('rect',{x:x-23,y:cy-40,width:46,height:40,fill:'#8fc5ee'},g),b=el('rect',{x:x-23,y:cy,width:46,height:40,fill:'#d8ecfa'},g),wall=el('line',{x1:x-24,x2:x+24,y1:cy,y2:cy,stroke:'black','stroke-width':4},g),spring=el('path',{fill:'none',stroke:'black','stroke-width':1.5},g);caps.push({x,cy,C,key,voltage,p0,p1,a,b,wall,spring});label(p1==='mid'||voltage==='vc2'?x+47:x,p1==='mid'||voltage==='vc2'?cy-12:cy-85,name,(C*1e6).toFixed(0)+' µF');}
+ function wheel(cx,cy,r,key,pa,pb,name,parameter,motor=false,reverse=false){if(key==='i')reverse=true;const dir=reverse?-1:1,offset=.22*r*dir,py=cy-r-22,y=cy-.866*r;pipe(`M${cx+offset} ${py} C${cx+offset} ${y-12} ${cx+.64*r*dir} ${y-9} ${cx+.5*r*dir} ${y} A${r} ${r} 0 1 ${reverse?0:1} ${cx-.5*r*dir} ${y} C${cx-.64*r*dir} ${y-9} ${cx-offset} ${y-12} ${cx-offset} ${py}`,key,pa,pb,14);const rot=el('g',{},parts);for(let k=0;k<4;k++){const a=k*Math.PI/2;el('line',{x1:cx+15*Math.cos(a),y1:cy+15*Math.sin(a),x2:cx+(r+3)*Math.cos(a),y2:cy+(r+3)*Math.sin(a),stroke:'#444','stroke-width':2},rot);}el('circle',{cx,cy,r:18,fill:'#ccc',stroke:'black','stroke-width':2},parts);text(cx,cy+5,motor?'':name?'J':'');if(motor){el('line',{x1:cx+18,y1:cy,x2:cx+44,y2:cy,stroke:'black','stroke-width':4},parts);el('rect',{x:cx+44,y:cy-14,width:32,height:28,fill:'white',stroke:'black','stroke-width':2},parts);text(cx+60,cy+5,'M');}registerRotor(rot,cx,cy,r,key,dir,key==='i');label(cx,cy+r+28,name,parameter);return{left:cx-offset,right:cx+offset,y:py};}
+ function load(x,top,bottom){pipe(`M${x} ${top} V${top+70}`,'ir','vo','vo');pipe(`M${x} ${top+70} V${bottom-70}`,'ir','vo','zero',4);pipe(`M${x} ${bottom-70} V${bottom}`,'ir','zero','zero');label(x-26,(top+bottom)/2,'R',p.R+' Ω');}
+ function primary(x,key,a,b){const w=wheel(x,245,35,key,a,b,'',null);text(x,250,'P');pipe(`M${x} 180 H${w.right} V${w.y}`,key,a,a);pipe(`M${w.left} ${w.y} V165 H${x-48} V310 H${x}`,key,b,b);}
+ const ground=420,top=90;
+ const pump=wheel(70,260,36,'is','zero','vs','Source',p.vs+' V',true);pipe(`M70 ${ground} H22 V170 H${pump.right} V${pump.y}`,'is','zero','zero');pipe(`M${pump.left} ${pump.y} V${top} H165`,'is','vs','vi');
+ if(!iso){
+ cap(190,top,ground,'ici','vi','Cᵢ',p.Ci);pipe('M165 90 H190','is','vi','vi');
+ const out=1030;cap(out,top,ground,'ico','vc','Cₒ',p.Co);pipe('M1030 90 H1130','ir','vo','vo');load(1130,top,ground);pipe('M1130 420 H1030','ir','zero','zero');pipe('M190 420 H70','is','zero','zero');
+ if(type==='buck'){
+ pipe('M190 90 H360','iq','vi','vi');pipe('M360 90 H490','iq','sw','sw');valve(360,90,'q1','Q','h');pipe('M490 420 V90','id','zero','sw');diode(490,270,'id','Dᵢ',false);const w=wheel(690,240,65,'i','sw','vo','L',p.L*1000+' mH');pipe(`M490 90 H${w.right} V${w.y}`,'i','sw','sw');pipe(`M${w.left} ${w.y} V40 H1030 V90`,'i','vo','vo');pipe('M1030 420 H490','i','zero','zero');pipe('M490 420 H190','iq','zero','zero');
+ }else if(type==='boost'){
+ const w=wheel(380,240,65,'i','vi','sw','L',p.L*1000+' mH');pipe(`M190 90 H${w.right} V${w.y}`,'i','vi','vi');pipe(`M${w.left} ${w.y} V40 H650 V90`,'i','sw','sw');pipe('M650 90 V260','iq','sw','sw');pipe('M650 260 V420','iq','zero','zero');valve(650,260,'q1','Q');pipe('M650 90 H830','id','sw','sw');pipe('M830 90 H1030','id','vo','vo');diode(830,90,'id','Dᵢ');pipe('M1030 420 H650','id','zero','zero');pipe('M650 420 H190','i','zero','zero');
+ }else if(type==='inverting'){
+ pipe('M190 90 H350','iq','vi','vi');pipe('M350 90 H500','iq','sw','sw');valve(350,90,'q1','Q','h');const w=wheel(530,250,65,'i','sw','zero','L',p.L*1000+' mH');pipe(`M500 90 H${w.right} V${w.y}`,'i','sw','sw');pipe(`M${w.left} ${w.y} V130 H425 V420 H190`,'i','zero','zero');pipe('M1030 90 H815','id','vo','vo');pipe('M815 90 H500','id','sw','sw');diode(815,90,'id','Dᵢ ←');diodes.at(-1).reverse=true;pipe('M190 420 H1030','output','zero','zero');label(1030,65,'− Vₒ');
+ }else{
+ pipe('M190 90 H310','iq','vi','vi');pipe('M310 90 H405','iq','left','left');valve(310,90,'q1','Q₁','h');pipe('M405 420 V90','d2','zero','left');diode(405,280,'d2','D₁',false);const w=wheel(600,240,60,'i','left','right','L',p.L*1000+' mH');pipe(`M405 90 H${w.right} V${w.y}`,'i','left','left');pipe(`M${w.left} ${w.y} V40 H765 V90`,'i','right','right');pipe('M765 90 V270','q2','right','right');pipe('M765 270 V420','q2','zero','zero');valve(765,270,'q2','Q₂');pipe('M765 90 H885','id','right','right');pipe('M885 90 H1030','id','vo','vo');diode(885,90,'id','D₂');pipe('M1030 420 H765','output','zero','zero');pipe('M765 420 H405','i','zero','zero');pipe('M405 420 H190','iq','zero','zero');
+ }
+ }else{
+ // Three-port, center-tapped secondary. Opposing freewheel currents cancel ampere-turns.
+ pipe('M165 90 H190','is','vi','vi');cap(190,90,420,'ici','vi','Cᵢ',p.Ci);pipe('M190 420 H70','is','zero','zero');
+ const full=type==='fullbuck'||type==='fullboost',fly=type==='flyback';let bus='vi';
+ if(type==='fullboost'){const w=wheel(310,220,40,'i','vi','sw','L',p.L*1000+' mH');pipe(`M190 90 H${w.right} V${w.y}`,'i','vi','vi');pipe(`M${w.left} ${w.y} V45 H390 V90`,'i','sw','sw');bus='sw';}else if(type==='half'){pipe('M190 90 H280','input','vi','vi');pipe('M280 90 H390','q1','vi','vi');}else pipe('M190 90 H390','input','vi','vi');
+ if(fly){pipe('M390 90 H580 V180','iq','vi','vi');primary(580,'iq','vi','sw');pipe('M580 310 V365','iq','sw','sw');pipe('M580 365 V420 H190','iq','zero','zero');valve(580,365,'q1','Q');}
+ else if(full){
+ pipe('M390 90 H525','q3',bus,bus);pipe('M390 90 V170','q1',bus,bus);pipe('M390 170 V250','q1','pa','pa');pipe('M390 250 V335','q2','pa','pa');pipe('M390 335 V420','q2','zero','zero');pipe('M525 90 V170','q3',bus,bus);pipe('M525 170 V250','q3','pb','pb');pipe('M525 250 V335','q4','pb','pb');pipe('M525 335 V420 H390','q4','zero','zero');pipe('M390 420 H190','input','zero','zero');valve(390,170,'q1','Q₁');valve(390,335,'q2','Q₂');valve(525,170,'q3','Q₃');valve(525,335,'q4','Q₄');pipe('M390 250 H470 V130 H600 V180','ip','pa','pa');pipe('M600 310 V380 H500 V250 H525','ip','pb','pb');primary(600,'ip','pa','pb');
+ }else{
+ // Dynamic split capacitors; midpoint pressure follows capacitor charge.
+ pipe('M390 90 V170','q1','vi','vi');pipe('M390 170 V250','q1','pa','pa');pipe('M390 250 V335','q2','pa','pa');pipe('M390 335 V420 H280','q2','zero','zero');valve(390,170,'q1','Q₁');valve(390,335,'q2','Q₂');pipe('M390 250 H535 V130 H600 V180','ip','pa','pa');primary(600,'ip','pa','mid');pipe('M600 310 V390 H335 V250 H295','ip','mid','mid');cap(280,90,250,'ic1','vc1','C₁',p.C1,'vi','mid');cap(280,250,420,'ic2','vc2','C₂',p.C2,'mid','zero');pipe('M280 420 H190','input','zero','zero');pipe('M280 250 H295','ip','mid','mid');
+ }
+ const px=fly?580:600,sx=710;
+ if(fly){pipe('M710 420 V310','output','zero','zero');const w=wheel(710,245,35,'output','zero','secv','',null,false,true);text(710,250,'S');pipe(`M710 310 H662 V165 H${w.right} V${w.y}`,'output','zero','zero');pipe(`M${w.left} ${w.y} V180 H710`,'output','secv','secv');pipe('M710 180 V90 H850','output','secv','secv');pipe('M850 90 H1030','output','vo','vo');diode(850,90,'id','Dᵢ');}
+ else{
+ // Restore one compact, center-tapped wheel with its inlet on the left.
+ pipe('M660 250 H675 V245 A35 35 0 0 1 742 230 L750 200 H710 V180','d1','zero','s1');
+ pipe('M710 180 V90 H830','d1','s1','s1');pipe('M830 90 H900 V145','d1','rect','rect');diode(830,90,'d1','D₁');
+ pipe('M660 250 H675 V245 A35 35 0 0 0 742 260 L750 290 H710 V310','d2','zero','s2');
+ pipe('M710 310 V355 H830','d2','s2','s2');pipe('M830 355 H900 V145','d2','rect','rect');diode(830,355,'d2','D₂');
+ pipe('M1030 420 H660 V250','output','zero','zero');
+ // Two paddle sectors in one housing retain the individual winding-flow cues.
+ for(const[key,upper,sign]of[['d1',true,1],['d2',false,-1]]){
+  const id='cl-sector-'+key,clip=el('clipPath',{id},$('#cl-defs'));
+  el('rect',{x:670,y:upper?205:245,width:80,height:40},clip);
+  const housing=el('g',{'clip-path':`url(#${id})`},parts),rot=el('g',{},housing);
+  for(let k=0;k<4;k++){const a=k*Math.PI/2;el('line',{x1:710+12*Math.cos(a),y1:245+12*Math.sin(a),x2:710+36*Math.cos(a),y2:245+36*Math.sin(a),stroke:'#444','stroke-width':2},rot);}
+  registerRotor(rot,710,245,35,key,sign);const w=rotors.at(-1);housing.append(w.arrow,w.tip);
+ }
+ el('circle',{cx:710,cy:245,r:18,fill:'#ccc',stroke:'black','stroke-width':2},parts);text(710,250,'S');
+ }
+ // Dashed power links deliberately do not impose rigid winding-speed constraints.
+ function link(d,key){const n=el('path',{d,fill:'none',stroke:'#0784cf','stroke-width':3,'stroke-dasharray':'5 5','data-power-link':key},parts);powerLinks.push({n,key});}
+ if(fly){
+  const cx=645,cy=345,r=24,rot=el('g',{},parts);
+  el('circle',{cx,cy,r,fill:'#ddd',stroke:'black','stroke-width':2},parts);
+  el('line',{x1:cx,y1:cy,x2:cx+r,y2:cy,stroke:'#444','stroke-width':3},rot);
+  registerRotor(rot,cx,cy,r,'i',1,true);text(cx,cy+5,'Jₘ');
+  link(`M${px+25} 260 L630 323`,'iq');link('M660 323 L690 260','output');
+  label(645,450,'Shared storage',p.L*1000+' mH · 1 : '+p.n);
+ }else{
+
+  label(650,470,'Shared core · 1 : '+p.n);
+ }
+ const ratio=Math.max(.5,Math.min(2,p.n)),r1=(sx-px)/(1+ratio),r2=r1*ratio,cy=245;
+ for(const[x,r,scale]of[[px,r1,1],[sx,r2,-1/ratio]]){
+  const g=el('g',{'data-gear':x===px?'primary':'secondary'},parts);let d='';const teeth=Math.round(r/2);
+  for(let j=0;j<teeth*4;j++){const a=j/(teeth*4)*Math.PI*2,rad=r+(j%4===0||j%4===3?2:-2);d+=(j?' L':'M')+(x+rad*Math.cos(a))+' '+(cy+rad*Math.sin(a));}
+  el('path',{d:d+' Z',fill:'white','fill-opacity':.04,stroke:'black','stroke-width':1.5},g);
+  el('line',{x1:x-r*.55,y1:cy,x2:x+r*.55,y2:cy,stroke:'black','stroke-width':1.5},g);
+  gears.push({g,x,cy,r,key:fly?'i':'ip',scale});
+ }
+ if(ratio!==p.n)label(650,500,'Actual 1 : '+p.n+' · gears shown 1 : '+ratio);
+ if(!fly&&type!=='fullboost'){const w=wheel(985,250,43,'i','rect','vo','L',p.L*1000+' mH');pipe(`M900 145 H${w.right} V${w.y}`,'i','rect','rect');pipe(`M${w.left} ${w.y} V100 H1080 V145`,'i','vo','vo');cap(1080,145,420,'ico','vc','Cₒ',p.Co);pipe('M1080 145 H1160','ir','vo','vo');load(1160,145,420);pipe('M1160 420 H1080','ir','zero','zero');pipe('M1080 420 H1030','i','zero','zero');}
+ else{if(!fly)pipe('M900 145 H1030 V90','output','vo','vo');cap(1030,90,420,'ico','vc','Cₒ',p.Co);pipe('M1030 90 H1130','ir','vo','vo');load(1130,90,420);pipe('M1130 420 H1030','ir','zero','zero');if(fly)pipe('M1030 420 H710','output','zero','zero');}
+ }
+ $('.water').setAttribute('viewBox',iso?'0 0 1200 550':'0 0 1200 500');pressureLabel=text(600,iso?533:480,'');
+}
+
+function makeCharts(){const specs=[['vq','Q₁ voltage','V'],['iq','Q₁ current','A'],['vd','D₁ voltage','V'],['id','D₁ current','A'],['vl',model.p.type==='flyback'?'Lₘ voltage':'L voltage','V'],['i',model.p.type==='flyback'?'Magnetizing current':'L current','A'],['vi','Cᵢ voltage','V'],['ici','Cᵢ current','A'],['vo','Cₒ voltage','V'],['ico','Cₒ current','A']];if(model.bridge||model.p.type==='flyback')specs.push(['vp','Primary voltage','V'],['ip','Primary current','A']);if(model.bridge)specs.push(['d1','Secondary S₁ current','A'],['d2','Secondary S₂ current','A']);if(model.p.type==='half')specs.push(['vc1','C₁ voltage','V'],['ic1','C₁ current','A'],['vc2','C₂ voltage','V'],['ic2','C₂ current','A']);charts=[];$('#cl-plots').replaceChildren();specs.forEach(([key,title,unit],index)=>{const box=document.createElement('div');box.className='plot';$('#cl-plots').append(box);const heading=document.createElement('div');heading.className='tabular-nums';box.append(heading);const svg=d3.select(box).append('svg').attr('role','img').attr('aria-label',title+' over time');const w=box.clientWidth,h=170,m={l:64,r:12,t:10,b:42},zoom=$('#cl-zoom').checked&&(key==='vi'||key==='vo'||key==='vc1'||key==='vc2'),mean=zoom?model.mean(key):0,scale=zoom?1000:1,u=zoom?'mV':unit;const convert=v=>(v-mean)*scale;
+// Duplicate switch-edge samples retain discontinuities rather than diagonal ramps.
+const data=[];model.samples.forEach((s,i)=>{if(i&&s.on!==model.samples[i-1].on){const prev=model.values(s.s,{on:model.samples[i-1].on,pol:model.samples[i-1].pol});data.push({t:s.t,a:convert(prev[key]),b:convert(reference(prev)[key])});}data.push({t:s.t,a:convert(s[key]),b:convert(reference(s)[key])});});
+const ext=d3.extent(data.flatMap(v=>[...(showSim?[v.a]:[]),...(showRef?[v.b]:[])]));if(ext[0]===undefined){ext[0]=-1;ext[1]=1;}const pad=Math.max((ext[1]-ext[0])*.12,zoom?.05:unit==='V'?.1:.02),x=d3.scaleLinear().domain([0,model.duration*1000]).range([m.l+2,w-m.r-2]),y=d3.scaleLinear().domain([ext[0]-pad,ext[1]+pad]).range([h-m.b-2,m.t+2]);svg.attr('viewBox',`0 0 ${w} ${h}`);svg.append('rect').attr('data-chart-frame','').attr('x',m.l).attr('y',m.t).attr('width',w-m.l-m.r).attr('height',h-m.t-m.b).attr('fill','none').attr('stroke','var(--border)');svg.append('g').attr('transform',`translate(0,${h-m.b})`).call(d3.axisBottom(x).ticks(w<400?3:4));svg.append('g').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(3).tickFormat(d3.format('.3~g')));svg.append('text').attr('class','axis-title').attr('data-axis','x').attr('x',(w+m.l)/2).attr('y',h-4).attr('text-anchor','middle').text('Time (ms)');svg.append('text').attr('class','axis-title').attr('data-axis','y').attr('transform',`translate(13,${(h-m.b+m.t)/2}) rotate(-90)`).attr('text-anchor','middle').text(`${zoom?'Δ ':''}${unit==='V'?'Voltage':'Current'} (${u})`);
+for(let k=0;k<4;k++)svg.append('line').attr('x1',x((k+model.p.duty)/model.p.f*1000)).attr('x2',x((k+model.p.duty)/model.p.f*1000)).attr('y1',m.t).attr('y2',h-m.b).attr('stroke','var(--border)').attr('stroke-dasharray','3 4');const clip=svg.append('defs').append('clipPath').attr('id','cl-clip-'+index).append('rect').attr('x',m.l).attr('y',m.t).attr('height',h-m.t-m.b);for(const[field,color,visible]of[['b','var(--viz-series-1)',showRef],['a','var(--foreground)',showSim]])if(visible){const d=d3.line().x(v=>x(v.t*1000)).y(v=>y(v[field]))(data);svg.append('path').attr('d',d).attr('fill','none').attr('stroke',color).attr('stroke-width',1.6).attr('opacity',.16);svg.append('path').attr('d',d).attr('fill','none').attr('stroke',color).attr('stroke-width',1.6).attr('opacity',field==='a'?.65:1).attr('clip-path',`url(#cl-clip-${index})`);}
+const guide=svg.append('line').attr('data-chart-hover-guide','').attr('y1',m.t).attr('y2',h-m.b).attr('stroke','var(--foreground)').attr('stroke-dasharray','2 2').style('display','none');const markers=['b','a'].map(field=>svg.append('circle').attr('data-chart-hover-marker',field).attr('r',3).attr('fill',field==='b'?'var(--viz-series-1)':'var(--foreground)').style('display','none'));const cursor=svg.append('line').attr('y1',m.t).attr('y2',h-m.b).attr('stroke','var(--foreground)').attr('stroke-width',1);svg.append('rect').attr('x',m.l).attr('y',m.t).attr('width',w-m.l-m.r).attr('height',h-m.t-m.b).attr('fill','transparent').attr('data-chart-hit','').attr('data-chart-hover-overlay','cross-series').on('pointerleave',()=>{guide.style('display','none');markers.forEach(m=>m.style('display','none'));$('.tip').hidden=true;}).on('pointermove',function(event){const px=Math.max(x(0),Math.min(x(model.duration*1000),d3.pointer(event,this)[0])),time=x.invert(px)/1000,v=model.at(time),ref=reference(v);guide.attr('x1',px).attr('x2',px).style('display',null);markers.forEach((m,j)=>m.attr('cx',px).attr('cy',y(convert(j?v[key]:ref[key]))).style('display',(j?showSim:showRef)?null:'none'));const tip=$('.tip'),r=root.getBoundingClientRect();tip.hidden=false;tip.style.left=Math.max(0,Math.min(root.clientWidth-220,event.clientX-r.left))+'px';tip.style.top=(event.clientY-r.top+15)+'px';tip.textContent=(time*1000).toFixed(3)+' ms'+(showRef?' · Textbook '+convert(ref[key]).toFixed(3)+' '+u:'')+(showSim?' · Simulated '+convert(v[key]).toFixed(3)+' '+u:'');if(event.buttons){playing=false;t=Math.max(0,Math.min(model.duration,x.invert(d3.pointer(event,this)[0])/1000));render();}}).on('pointerdown',function(event){playing=false;t=Math.max(0,Math.min(model.duration,x.invert(d3.pointer(event,this)[0])/1000));render();});addStatistics(svg,y,w,h,m,key,u,convert);const expressionGuide=document.createElement('div');expressionGuide.className='calculation text-small';expressionGuide.style.whiteSpace='pre-line';const calc=document.createElement('details');calc.className='calculation text-small';const summary=document.createElement('summary');summary.textContent='Values & calculations · now, min, mean, max';calc.append(summary,expressionGuide);const formulaNode=document.createElement('div');formulaNode.style.whiteSpace='pre-line';calc.append(formulaNode);calc.hidden=!$('#cl-calcs').checked;box.append(calc);charts.push({key,title,unit:u,convert,heading,x,clip,cursor,mean,zoom,formulaNode,calc,guide:expressionGuide});});}
+
+function render(){const v=model.at(t);drawWater(v);$('#cl-input-note').textContent=model.p.rs===0?'Cᵢ is held at the source voltage: dVᵢ/dt = 0, so i_Cᵢ = 0.':`Input capacitor: ${Math.abs(v.ici)<1e-5?'momentarily steady':v.ici>0?'charging':'discharging'} · i_Cᵢ = ${v.ici.toFixed(3)} A`;$('#cl-play').textContent=playing?'Pause':'Play';$('#cl-time').textContent=`${(t*1000).toFixed(3)} ms`;$('#cl-scrub').value=t/model.duration*1000;for(const c of charts){const x=c.x(t*1000);c.clip.attr('width',Math.max(0,x-64));c.cursor.attr('x1',x).attr('x2',x);c.heading.textContent=`${c.title} · ${c.convert(v[c.key]).toFixed(3)} ${c.unit}${c.zoom?' from '+c.mean.toFixed(3)+' V':''}`;c.guide.textContent=envelopeExpression(c);c.guide.hidden=!$('#cl-calcs').checked;c.formulaNode.textContent='Now: '+formula(c.key,v)+'\n\n'+statisticsCalculation(c);c.calc.hidden=!$('#cl-calcs').checked;}}
+function rebuild(){const params={type:$('#cl-type').value,losses:$('#cl-loss').checked,rs:+$('#cl-feed').value};for(const[k,scale]of[['vs',1],['L',.001],['Ci',.000001],['C1',.000001],['C2',.000001],['Co',.000001],['R',1],['f',1000],['n',1],['duty',.01],['rq',.001],['rL',.001],['vd',1],['esr',.001]]){const input=$('#cl-'+k);if(!input.checkValidity()){input.reportValidity();return;}params[k]=+input.value*scale;}try{const candidate=CircuitModel.simulate(params);model=candidate;$('#cl-error').hidden=true;}catch(e){$('#cl-error').textContent=e.message+' Previous circuit retained.';$('#cl-error').hidden=false;return;}t=0;turns=0;pressureMax=Math.ceil(Math.max(model.p.vs,...model.samples.map(v=>Math.max(Math.abs(v.vo),Math.abs(v.vp)*model.p.n)))/12)*12;pressureMin=(model.sign<0||model.bridge||model.p.type==='flyback')?-pressureMax:0;root.querySelectorAll('.split-control').forEach(n=>n.hidden=model.p.type!=='half');buildDiagram();makeCharts();$('#cl-transfer').textContent=transfer();$('#cl-regime').textContent=model.regime+(model.regime==='DCM'?' · textbook CCM reference no longer applies':'');$('#cl-n').disabled=!['flyback','half','fullbuck','fullboost'].includes(model.p.type);render();$('#cl-announce').textContent=CircuitModel.names[model.p.type]+' recalculated';}
+for(const[k,name]of Object.entries(CircuitModel.names)){const o=document.createElement('option');o.value=k;o.textContent=name;$('#cl-type').append(o);}
+$('#cl-type').onchange=rebuild;$('#cl-apply').onclick=rebuild;$('#cl-loss').onchange=rebuild;$('#cl-feed').onchange=rebuild;$('#cl-panel-toggle').onclick=()=>{const p=$('#cl-panel');p.hidden=!p.hidden;$('#cl-panel-toggle').setAttribute('aria-expanded',!p.hidden);};$('#cl-play').onclick=()=>{playing=!playing;render()};$('#cl-scrub').oninput=()=>{playing=false;t=+$('#cl-scrub').value/1000*model.duration;render()};for(const id of['#cl-color','#cl-gray','#cl-values','#cl-calcs'])$(id).onchange=render;for(const id of['#cl-zoom','#cl-levels'])$(id).onchange=()=>{makeCharts();render()};for(const[id,key]of[['#cl-ref','ref'],['#cl-sim','sim']])$(id).onclick=()=>{if(key==='ref')showRef=!showRef;else showSim=!showSim;$(id).setAttribute('aria-pressed',key==='ref'?showRef:showSim);makeCharts();render()};for(const k of['gain','flow','contrast'])$('#cl-'+k).oninput=()=>{$('#cl-'+k+'val').textContent=$('#cl-'+k).value+'×'+(k==='gain'?' visual':'');render();};
+rebuild();let width=root.clientWidth;new ResizeObserver(()=>{if(root.clientWidth!==width){width=root.clientWidth;makeCharts();render();}}).observe(root);let last=performance.now();function frame(now){const dt=Math.min(.1,(now-last)/1000);last=now;if(playing){t+=dt/(+$('#cl-speed').value)*1/model.p.f;if(t>model.duration){t-=model.duration;turns++;}render();}requestAnimationFrame(frame)}requestAnimationFrame(frame);window.circuitLab={get model(){return model},get charts(){return charts},get pipeCount(){return pipes.length},get rotors(){return rotors},get caps(){return caps},get powerLinks(){return powerLinks}};
+})();
+
+</script>
+
+<div class="caveat">
+  <strong>Where this analogy lies to you.</strong>
+  Hydraulic resistance is genuinely nonlinear — real pipe flow shifts between laminar and
+  turbulent, while an electrical resistor stays linear. The water carries the energy here;
+  in a real circuit most of it travels in the fields <em>outside</em> the conductor. And the
+  analogy has nothing honest to say about semiconductor behaviour. It is a lens for
+  building intuition about energy storage and transfer, not a model of how electricity works.
+  The schematic and the numbers are the authority.
+</div>
+</div>
+
+<script>
+/* Buck-only build: drop the other topologies from the picker and hide it.
+   'buck' is first in CircuitModel.names, so it is already the selected default. */
+(function(){
+  var sel = document.getElementById('cl-type');
+  if (!sel) return;
+  Array.prototype.slice.call(sel.options).forEach(function(o){
+    if (o.value !== 'buck') o.remove();
+  });
+  sel.value = 'buck';
+  var label = sel.closest('label');
+  if (label) label.style.display = 'none';
+})();
+</script>
+</body>
+</html>
