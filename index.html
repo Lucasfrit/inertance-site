@@ -1,188 +1,22 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Inertance — power electronics you can see</title>
-<meta name="description" content="An interactive simulator that shows switching power conversion as a hydraulic circuit. Pressure is voltage, flow is current, inertia is inductance — with live waveforms alongside.">
-<meta property="og:title" content="Inertance — power electronics you can see">
-<meta property="og:description" content="A buck converter shown as water: pressure is voltage, flow is current, inertia is inductance. Live waveforms alongside.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://inertance.org/">
-<meta name="author" content="Lucas Wybrandt">
-<link rel="canonical" href="https://inertance.org/">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Inertance", "url": "https://inertance.org/app/", "description": "An educational circuit simulator for understanding power electronics through a hydraulic analogy, with editable circuits and synchronized waveforms.", "applicationCategory": "EducationalApplication", "operatingSystem": "Web browser", "isAccessibleForFree": true, "creator": {"@type": "Person", "name": "Lucas Wybrandt", "url": "https://github.com/Lucasfrit"}, "license": "https://inertance.org/LICENSE"}</script>
-<link rel="icon" type="image/svg+xml" href="app/assets/inertance-pipe-mark.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400&display=swap">
-<style>
-:root{
-  --bg:#eaeff2; --surface:#fff; --ink:#0d1a21; --ink-2:#33474f; --muted:#5f757f;
-  --line:#cbd8de; --accent:#0c6c9e; --accent-soft:#e2eef5;
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg:#0a1216; --surface:#101c22; --ink:#e4eef2; --ink-2:#b4c7cf; --muted:#8aa0a9;
-    --line:#26383f; --accent:#57b4e4; --accent-soft:#122b39;
-  }
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);
-  font-family:"IBM Plex Serif",Georgia,serif;font-size:17px;line-height:1.62;
-  -webkit-font-smoothing:antialiased}
-.wrap{max-width:1100px;margin:0 auto;padding-inline:20px}
-.col{max-width:66ch}
-h1,h2,h3,.ui{font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,sans-serif}
-.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
-a{color:var(--accent);text-underline-offset:2px}
-a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-
-header{background:var(--surface);border-bottom:1px solid var(--line)}
-.head-in{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:40px 34px;
-  display:flex;flex-direction:column;gap:16px}
-.brand{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--accent)}
-h1{font-size:clamp(30px,5.4vw,46px);line-height:1.06;margin:0;font-weight:600;
-  letter-spacing:-.02em;max-width:19ch;text-wrap:balance}
-.dek{font-size:19px;color:var(--ink-2);margin:0;max-width:56ch}
-.app-link{display:inline-block;width:fit-content;background:var(--accent);color:var(--surface);padding:10px 16px;border-radius:3px;font-weight:600;text-decoration:none}
-.app-link:hover{text-decoration:underline}
-.mapping{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px}
-.chip{font-family:"IBM Plex Mono",monospace;font-size:11.5px;background:var(--accent-soft);
-  color:var(--accent);padding:4px 9px;border-radius:2px;white-space:nowrap}
-
-section{margin-block:52px}
-h2{font-size:clamp(21px,3.2vw,27px);font-weight:600;letter-spacing:-.015em;margin:0 0 14px;
-  text-wrap:balance}
-p{margin:0 0 16px}
-.lead{font-size:18px}
-
-.demo{background:var(--surface);border:1px solid var(--line);margin-block:40px}
-.demo-bar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between;
-  padding:13px 18px;border-bottom:1px solid var(--line);font-family:"IBM Plex Sans",sans-serif}
-.demo-bar strong{font-size:15px;font-weight:600}
-.demo-bar span{font-size:13px;color:var(--muted)}
-.demo-bar a{font-size:13.5px;font-weight:500;text-decoration:none;font-family:"IBM Plex Sans",sans-serif}
-.demo-bar a:hover{text-decoration:underline}
-.demo iframe{display:block;width:100%;height:1400px;border:0;background:var(--surface)}
-@media(max-width:700px){.demo iframe{height:1750px}}
-
-.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:28px}
-.two h3{font-size:17px;margin:0 0 7px;font-weight:600}
-.two p{font-family:"IBM Plex Sans",sans-serif;font-size:15px;color:var(--ink-2);margin:0;line-height:1.55}
-
-.limits{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
-  padding:22px 24px}
-.limits h2{font-size:18px;margin-bottom:10px}
-.limits p{font-size:15.5px;color:var(--ink-2);margin-bottom:12px}
-.limits p:last-child{margin-bottom:0}
-
-footer{border-top:1px solid var(--line);margin-top:56px;padding-block:24px 60px;
-  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);line-height:1.8}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Open circuit simulator · Inertance</title>
+  <meta name="author" content="Lucas Wybrandt">
+  <meta name="description" content="An educational circuit simulator for understanding power electronics through a hydraulic analogy.">
+  <link rel="canonical" href="https://inertance.org/app/">
+  <link rel="icon" type="image/svg+xml" href="app/assets/inertance-pipe-mark.svg">
+  <script>
+    const simulator = new URL('https://inertance.org/app/');
+    simulator.search = location.search;
+    simulator.hash = location.hash;
+    location.replace(simulator.href);
+  </script>
+  <noscript><meta http-equiv="refresh" content="0; url=https://inertance.org/app/"></noscript>
 </head>
 <body>
-
-<header>
-  <div class="head-in">
-    <div class="brand">Inertance</div>
-    <h1>Power electronics you can actually see</h1>
-    <p class="dek">A switching converter, drawn as a hydraulic circuit and solved as one —
-      so you can watch where the energy goes instead of taking the equations on faith.</p>
-    <a class="app-link ui" href="app/">Open circuit simulator →</a>
-    <div class="mapping">
-      <span class="chip">pressure = voltage</span>
-      <span class="chip">flow = current</span>
-      <span class="chip">inertia = inductance</span>
-      <span class="chip">spring-loaded piston = capacitance</span>
-      <span class="chip">mechanical coupling = transformer</span>
-    </div>
-  </div>
-</header>
-
-<div class="wrap">
-
-  <div class="demo">
-    <div class="demo-bar">
-      <div><strong>Buck converter</strong> <span>— adjust duty, L, C, load and watch the inductor refuse to change its current</span></div>
-      <a href="lab/">Open full screen →</a>
-    </div>
-    <iframe src="lab/" title="Interactive buck converter, hydraulic view" loading="lazy"></iframe>
-  </div>
-
-  <section class="col">
-    <h2>Why a water analogy again?</h2>
-    <p class="lead">Because almost every version of it you have seen is a drawing.</p>
-    <p>The pictures in textbooks are static: a pipe, a narrow section, an arrow. They get you
-      as far as Ohm's law and then stop, which is precisely where power electronics begins.
-      Nothing in a static diagram tells you why an inductor fights a change in current, or
-      where the energy sits during the moment a switch opens.</p>
-    <p>This runs the analogy as physics rather than illustration. The water has inertia, the
-      piston has a spring, and the energy moving between them is solved in SI units and then
-      drawn. When the switch opens, the inductor's momentum is what forces the diode to
-      conduct — and you can see it happen, slowed down as far as you like, with the schematic
-      and the waveforms tracking the same instant.</p>
-  </section>
-
-  <section>
-    <h2 class="col">What is different here</h2>
-    <div class="two">
-      <div>
-        <h3>The analogy is solved, not drawn</h3>
-        <p>Flow and pressure come from a switched state model integrated in SI units. The
-          picture follows the physics; the physics never follows the picture.</p>
-      </div>
-      <div>
-        <h3>Three views, one clock</h3>
-        <p>Water, schematic and waveforms share a single timeline. Scrub to any point in the
-          switching cycle and all three show that instant.</p>
-      </div>
-      <div>
-        <h3>Ideal against actual</h3>
-        <p>Textbook CCM alongside the simulated result, with ripple and min/mean/max computed
-          from the waveform rather than asserted.</p>
-      </div>
-      <div>
-        <h3>It admits what it gets wrong</h3>
-        <p>The analogy breaks in specific, nameable places. Those are documented on the page
-          rather than quietly hoped past.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="limits col">
-    <h2>Where this analogy lies to you</h2>
-    <p>Hydraulic resistance is genuinely nonlinear — real pipe flow shifts between laminar and
-      turbulent — while an electrical resistor stays linear. Here the water carries the energy;
-      in a real circuit most of it travels in the fields <em>outside</em> the conductor. And the
-      analogy has nothing honest to say about semiconductor behaviour, which is why the
-      switch is drawn as a valve and left there.</p>
-    <p>It is a lens for building intuition about energy storage and transfer. It is not a model
-      of how electricity works. The schematic and the numbers are the authority — which is why
-      they are never more than a glance away.</p>
-  </section>
-
-  <section class="col">
-    <h2>Status</h2>
-    <p>Early. The <a href="app/">circuit simulator</a> lets you edit circuits, run
-      startup simulations and explore ten converter and transformer presets with
-      synchronized hydraulic views and waveforms. Ripple is the default; Ideal
-      reductions are available for supported circuits, while Leakage remains
-      experimental. The buck demo above is a separate steady-periodic example.</p>
-    <p>If you teach this material, or you remember
-      <a href="https://www.research-collection.ethz.ch/handle/20.500.11850/203182">ETH Zurich's iPES</a>
-      and have missed it since it went offline, I would genuinely like to hear from you.</p>
-  </section>
-
-  <footer>
-    Inertance · built by <a href="https://github.com/Lucasfrit">Lucas Wybrandt</a><br>
-    <a href="about/">About, contact &amp; privacy</a> · <a href="https://github.com/Lucasfrit/inertance-site/issues">Report a problem</a><br>
-    Simulator code AGPL-3.0-or-later · <a href="https://github.com/Lucasfrit/inertance-site">source on GitHub</a><br>
-    An independent project. Not affiliated with any university or manufacturer.
-  </footer>
-
-</div>
+  <p><a href="https://inertance.org/app/">Open circuit simulator</a></p>
 </body>
 </html>

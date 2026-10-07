@@ -140,6 +140,13 @@ the public Pages server: both redirect to `https://inertance.org/` with valid TL
 DTU DNS still resolves www to `192.38.84.55`, its block server. Correct public
 redirects and HTTPS enforcement cannot remove that network classification.
 
+The user subsequently requested the same direct entry on inertance.org. Its
+root `index.html` now opens `https://inertance.org/app/`, preserving the query
+and preset hash and replacing the browser history entry. The existing HTTPS
+and www redirects remain in place. Both domains now open the app by default;
+`tools/check-live.cjs` expects this unless `HOME_OPENS_APP=0` is supplied for
+a landing-page variant.
+
 Official setup references:
 - https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
 - https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https

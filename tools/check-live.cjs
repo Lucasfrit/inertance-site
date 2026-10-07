@@ -23,7 +23,7 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     const home = await page.goto(origin + '/');
     assert.equal(home.status(), 200);
     assert.equal(new URL(page.url()).origin, origin, 'landing page stays on the requested domain');
-    if (process.env.HOME_OPENS_APP === '1') {
+    if (process.env.HOME_OPENS_APP !== '0') {
       await page.waitForURL(origin + '/app/**');
     } else {
       await page.getByRole('link', { name: 'Open circuit simulator' }).click();

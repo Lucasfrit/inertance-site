@@ -3,7 +3,7 @@
 Public site for **Inertance** — an interactive simulator that shows switching power
 conversion as a hydraulic circuit.
 
-- `index.html` — landing page
+- `index.html` — opens the circuit simulator at `https://inertance.org/app/` automatically
 - `about/index.html` — purpose, author, public contact and browser privacy information
 - `assets/vendor/` — pinned d3 library and upstream license
 - `robots.txt`, `sitemap.xml` — crawler guidance for the public pages
