@@ -13,7 +13,8 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
-    page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+    page.on('response', r => { if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`); });
+    page.on('console', m => { if (m.type() === 'error') errors.push(m.text() + " " + m.location().url); });
     const home = await page.goto('https://inertance.org/');
     assert.equal(home.status(), 200);
     await page.getByRole('link', { name: 'Open circuit simulator' }).click();
