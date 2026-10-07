@@ -127,6 +127,19 @@ SITE_ORIGIN=https://hydraulicanalogy.com SOURCE_REV=763d364 node tools/check-liv
 `CANONICAL_ORIGIN` can override the expected canonical domain for local tests;
 `PAGES_IP` maps the requested site hostname inside the test browser only.
 
+### Direct simulator entry — 7 October 2026
+
+The secondary domain's root now uses its own `entry.html` to open
+`https://hydraulicanalogy.com/app/` automatically. JavaScript preserves the query
+and preset hash and replaces the history entry; a no-JavaScript refresh and
+visible link provide a fallback. GitHub continues to enforce HTTPS and redirects
+www to the secondary apex. Set `HOME_OPENS_APP=1` for the secondary smoke check.
+
+`http://www.inertance.org/` and `https://www.inertance.org/` were checked against
+the public Pages server: both redirect to `https://inertance.org/` with valid TLS.
+DTU DNS still resolves www to `192.38.84.55`, its block server. Correct public
+redirects and HTTPS enforcement cannot remove that network classification.
+
 Official setup references:
 - https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
 - https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https

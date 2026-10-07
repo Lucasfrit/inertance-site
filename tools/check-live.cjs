@@ -23,7 +23,11 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     const home = await page.goto(origin + '/');
     assert.equal(home.status(), 200);
     assert.equal(new URL(page.url()).origin, origin, 'landing page stays on the requested domain');
-    await page.getByRole('link', { name: 'Open circuit simulator' }).click();
+    if (process.env.HOME_OPENS_APP === '1') {
+      await page.waitForURL(origin + '/app/**');
+    } else {
+      await page.getByRole('link', { name: 'Open circuit simulator' }).click();
+    }
     assert.equal(new URL(page.url()).pathname, '/app/');
     assert.equal(new URL(page.url()).origin, origin, 'simulator stays on the requested domain');
     const idle = () => page.waitForFunction(() => window.circuitEditor &&
@@ -67,6 +71,6 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     assert.equal(sitemap.status(), 200);
     assert((await sitemap.text()).includes(canonical + '/about/'));
     assert.deepEqual(errors, []);
-    console.log('Production: landing link, committed source stamp, buck playback, fullboost hash, themes, phone, lab, about, sitemap, local runtime scripts and zero browser errors passed. ' + stamp);
+    console.log('Production: site entry, committed source stamp, buck playback, fullboost hash, themes, phone, lab, about, sitemap, local runtime scripts and zero browser errors passed. ' + stamp);
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });
