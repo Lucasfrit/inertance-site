@@ -103,14 +103,22 @@ The prepared secondary files passed `tools/check-live.cjs` against a local
 server, including desktop/phone, playback, presets, About, sitemap and local
 runtime scripts. Every copied file matched upstream apart from the intended
 domain substitutions. Live HTTP via the GitHub Pages IP returned the correct
-release metadata. Normal domain access still redirects through Porkbun until
-registrar DNS is changed; HTTPS on GitHub awaits that DNS change.
+release metadata.
 
-Pending registrar cutover: remove URL forwarding for the apex and www, replace
-the apex forwarding records with the same four GitHub A records listed above,
-and set www CNAME to `lucasfrit.github.io`. Preserve other records. Then confirm
-public DNS, certificate issuance, HTTPS enforcement, apex HTTP 200, www-to-apex
-redirects and a smoke check:
+Registrar cutover completed: Porkbun URL forwarding was removed. Its GitHub
+template added the same four GitHub A records listed above and the four
+official IPv6 AAAA records (`2606:50c0:8000::153` through
+`2606:50c0:8003::153`). www CNAME is `lucasfrit.github.io`. The five existing
+email and ACME TXT records were preserved. Authoritative DNS and public
+DNS-over-HTTPS confirm the changes; normal HTTP now serves the copy directly.
+GitHub's health check confirms valid apex DNS and HTTPS eligibility.
+
+GitHub approved a Let's Encrypt certificate for `hydraulicanalogy.com` and
+`www.hydraulicanalogy.com`, expiring 5 January 2027. HTTPS enforcement is on.
+Normal HTTPS requests return HTTP 200 for `/app/`; HTTP and HTTPS www redirect
+to the secondary HTTPS apex, preserving the path. No primary-domain redirect
+is involved. The live browser smoke check passes through normal system DNS
+with full TLS validation (no resolver override):
 
 ```sh
 SITE_ORIGIN=https://hydraulicanalogy.com SOURCE_REV=763d364 node tools/check-live.cjs
