@@ -59,7 +59,7 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     await page.screenshot({ path: path.join(out, 'live-about-phone.png'), fullPage: true });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     assert.deepEqual([...scriptHosts], [origin], 'all runtime JavaScript comes from our own site');
-    const sitemap = await page.request.get(origin + '/sitemap.xml');
+    const sitemap = await page.goto(origin + '/sitemap.xml');
     assert.equal(sitemap.status(), 200);
     assert((await sitemap.text()).includes('https://inertance.org/about/'));
     assert.deepEqual(errors, []);

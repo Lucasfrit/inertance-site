@@ -115,3 +115,13 @@ Reference: https://support.talosintelligence.com/docs/contentcat/
 Validation before this release: the full `--release` pipeline passed, as did
 the expanded live smoke check against a local server (About, sitemap and only
 same-origin runtime scripts, plus playback, desktop/phone and both themes).
+
+Live verification of identity release `e13dfb8640eed3076eda39a775b05a1aff47e217`
+passed after Pages run 37599659834 succeeded. The expanded browser smoke check
+passed About/privacy/source content, canonical metadata, sitemap, only same-origin
+JavaScript, playback, fullboost hash, both themes, phone and old lab with zero
+browser/resource errors. The About HTML and vendored d3 checksum matched the
+local release. Both domain certificates and www HTTPS redirect remained valid.
+DTU DNS still returned 192.38.84.55 after release; acceptance is not claimed.
+The sitemap check uses browser navigation so that the verified Pages DNS mapping
+also applies to that request; a separate Node HTTP client used the blocked Mac DNS.
