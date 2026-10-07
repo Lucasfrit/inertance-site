@@ -6,8 +6,10 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
   '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'));
 (async () => {
   const origin = process.env.SITE_ORIGIN || 'https://inertance.org';
+  const canonical = process.env.CANONICAL_ORIGIN || origin;
+  const hostname = new URL(origin).hostname;
   const args = process.env.PAGES_IP ? [
-    `--host-resolver-rules=MAP inertance.org ${process.env.PAGES_IP},MAP www.inertance.org ${process.env.PAGES_IP}`
+    `--host-resolver-rules=MAP ${hostname} ${process.env.PAGES_IP},MAP www.${hostname} ${process.env.PAGES_IP}`
   ] : [];
   const browser = await chromium.launch({ channel: 'chrome', headless: true, args });
   try {
@@ -20,8 +22,10 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     page.on('console', m => { if (m.type() === 'error') errors.push(m.text() + " " + m.location().url); });
     const home = await page.goto(origin + '/');
     assert.equal(home.status(), 200);
+    assert.equal(new URL(page.url()).origin, origin, 'landing page stays on the requested domain');
     await page.getByRole('link', { name: 'Open circuit simulator' }).click();
     assert.equal(new URL(page.url()).pathname, '/app/');
+    assert.equal(new URL(page.url()).origin, origin, 'simulator stays on the requested domain');
     const idle = () => page.waitForFunction(() => window.circuitEditor &&
       !circuitEditor.arranging && circuitEditor.model, {}, { timeout: 90000 });
     await idle();
@@ -55,13 +59,13 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     assert.equal(info.status(), 200);
     assert.match(await page.textContent('main'), /Lucas Wybrandt/);
     assert.match(await page.textContent('main'), /Simulations run in your browser/);
-    assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'), 'https://inertance.org/about/');
+    assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'), canonical + '/about/');
     await page.screenshot({ path: path.join(out, 'live-about-phone.png'), fullPage: true });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     assert.deepEqual([...scriptHosts], [origin], 'all runtime JavaScript comes from our own site');
     const sitemap = await page.goto(origin + '/sitemap.xml');
     assert.equal(sitemap.status(), 200);
-    assert((await sitemap.text()).includes('https://inertance.org/about/'));
+    assert((await sitemap.text()).includes(canonical + '/about/'));
     assert.deepEqual(errors, []);
     console.log('Production: landing link, committed source stamp, buck playback, fullboost hash, themes, phone, lab, about, sitemap, local runtime scripts and zero browser errors passed. ' + stamp);
   } finally { await browser.close(); }

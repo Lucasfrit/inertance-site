@@ -76,6 +76,49 @@ Confirm the Pages build revision and run `node tools/check-live.cjs` against
 production. Set `PAGES_IP=185.199.108.153` only when local DNS is incorrect;
 set `SOURCE_REV` to the expected simulator short revision.
 
+## Second domain: hydraulicanalogy.com — 7 October 2026
+
+The owner requested direct access through the second domain instead of its
+Porkbun redirect to inertance.org. Separate GitHub Pages hosting is configured
+in `Lucasfrit/hydraulicanalogy-site`, custom Actions publishing, with custom
+domain `hydraulicanalogy.com`. The primary site's CNAME and HTTPS configuration
+are unchanged.
+
+The secondary workflow reads this public repository's `main`, copies only
+`index.html`, `app/`, `lab/`, `about/`, `assets/`, `robots.txt`, `sitemap.xml`
+and `LICENSE`, and rewrites absolute primary-domain URLs to the secondary
+domain. No private checkout is involved. `/release.json` records the upstream
+commit. The first deployment used `5b81ec9590509a8683ca2ae373cdd9c0218c7ace`:
+https://github.com/Lucasfrit/hydraulicanalogy-site/actions/runs/37602653177
+
+The secondary workflow runs hourly at minute 17 (GitHub schedules may be
+delayed or disabled after repository inactivity). To update immediately after
+a primary release, run:
+
+```sh
+gh workflow run pages.yml --repo Lucasfrit/hydraulicanalogy-site
+```
+
+The prepared secondary files passed `tools/check-live.cjs` against a local
+server, including desktop/phone, playback, presets, About, sitemap and local
+runtime scripts. Every copied file matched upstream apart from the intended
+domain substitutions. Live HTTP via the GitHub Pages IP returned the correct
+release metadata. Normal domain access still redirects through Porkbun until
+registrar DNS is changed; HTTPS on GitHub awaits that DNS change.
+
+Pending registrar cutover: remove URL forwarding for the apex and www, replace
+the apex forwarding records with the same four GitHub A records listed above,
+and set www CNAME to `lucasfrit.github.io`. Preserve other records. Then confirm
+public DNS, certificate issuance, HTTPS enforcement, apex HTTP 200, www-to-apex
+redirects and a smoke check:
+
+```sh
+SITE_ORIGIN=https://hydraulicanalogy.com SOURCE_REV=763d364 node tools/check-live.cjs
+```
+
+`CANONICAL_ORIGIN` can override the expected canonical domain for local tests;
+`PAGES_IP` maps the requested site hostname inside the test browser only.
+
 Official setup references:
 - https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
 - https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https
