@@ -42,8 +42,24 @@ Desktop and 390 px phone layouts and both app themes were reviewed. Both
 `app/` and `lab/` reproduced byte-for-byte in a clean temporary directory from
 the committed private source and the staged public release tree.
 
-Deployment verification and the public release revision are recorded below
-once GitHub finishes the release build.
+## Live verification
+
+The application release is public commit
+`767d4bde904776f624fe6ecd596c84adfb7087d3`; site icon/resource-check fixes are
+`0a72c14fb5e4cc7b18b9d7cd96bdb85fb16e4f52`. Both Pages runs succeeded:
+- https://github.com/Lucasfrit/inertance-site/actions/runs/37596856175
+- https://github.com/Lucasfrit/inertance-site/actions/runs/37597050421
+
+After deployment, `PAGES_IP=185.199.108.153 SOURCE_REV=91e6c45 node tools/check-live.cjs` passed: HTTPS landing-page entry, exact clean source stamp,
+real buck playback, fullboost hash navigation, both themes, 390 px phone
+Simulation controls, old lab loading and zero browser/resource errors. The first
+live check found the browser's default favicon request returning 404; explicit
+SVG icons were added to both the landing page and the lab build.
+
+HTTP redirects to HTTPS; www redirects to the apex with a valid certificate.
+The live landing/app HTML matched the local generated files byte-for-byte.
+Both final apps reproduced byte-for-byte from clean committed checkouts.
+This final documentation update changes no runtime code.
 
 ## Remaining limitations
 
