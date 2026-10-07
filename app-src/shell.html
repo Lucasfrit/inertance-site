@@ -1,0 +1,239 @@
+<!--
+  Compact hybrid shell for the real Inertance circuit editor.
+
+  CONTRACT: editor-ui.js (private repo, ../cwas/simulator) binds to the #ed-* ids
+  below and to the .work class. Every id must exist exactly once, even when a
+  control is visually hidden, or the editor throws at start-up. The full list is in
+  docs/APP.md. Elements marked data-host are owned by host.js, not by the editor.
+-->
+<div id="circuit-editor" class="app" data-chart-height="150">
+
+  <header class="app-head">
+    <a class="app-logo logo-pair" href="../" aria-label="Inertance home"><img class="logo-light" src="assets/inertance-pipe-wordmark.svg" alt=""><img class="logo-dark" src="assets/inertance-pipe-wordmark-reversed.svg" alt=""></a>
+    <span class="app-title" data-host="title">Circuit</span>
+
+    <label class="head-select"><span>Circuit</span><select id="ed-converter"><option value="">Choose circuit…</option></select></label>
+
+    <details class="menu" data-menu>
+      <summary>File</summary>
+      <div class="menu-body">
+        <button id="ed-new" type="button">New blank circuit</button>
+        <button id="ed-load" type="button">Open JSON…</button>
+        <button id="ed-save" type="button">Save JSON…</button>
+        <hr>
+        <span class="menu-label">Examples</span>
+        <button id="ed-preset" type="button">Capacitor buffer</button>
+        <button id="ed-freewheel" type="button">Inductor + diode</button>
+        <button id="ed-hydraulic-review" type="button">Load + meters</button>
+      </div>
+    </details>
+
+    <button class="head-button active" type="button" data-host="builder-toggle" aria-pressed="true" title="Build and connect pipes; close to select and move components">Build</button>
+    <button class="head-button" type="button" data-host="setup-toggle" aria-pressed="false">Simulation</button>
+    <button id="ed-inspector-toggle" class="head-button" type="button" aria-expanded="false" aria-controls="ed-inspector">Properties</button>
+
+    <details class="menu" data-menu>
+      <summary>Playback</summary>
+      <div class="menu-body settings">
+        <p class="menu-note">Choose Startup or Settled cycles in the model strip. Settled view is shown only after successive cycles converge. Reduced Ideal is periodic without startup; general Ideal component dynamics retain startup.</p>
+        <label>Loop <select data-host="loop-menu"><option value="1">Continuous</option><option value="0">One run</option></select></label>
+      </div>
+    </details>
+
+    <details class="menu" data-menu>
+      <summary>View</summary>
+      <div class="menu-body settings wide">
+        <b>Panels</b>
+        <label>Builder <input type="checkbox" data-panel="builder" checked></label>
+        <label>Simulation setup <input type="checkbox" data-panel="setup"></label>
+        <label>Properties <input type="checkbox" data-panel="properties"></label>
+        <label>Playback <input type="checkbox" data-panel="playback" checked></label>
+        <label>Waveforms <input type="checkbox" data-panel="waveforms" checked></label>
+        <p class="menu-note">Builder and Simulation setup can be open together. Panel choices are saved on this device.</p>
+
+      </div>
+    </details>
+
+    <details class="menu" data-menu>
+      <summary>Help</summary>
+      <div class="menu-body help">
+        <b>Editing</b>
+        <p>Pick a part in the Builder, then click the canvas to place it (R rotates, Esc cancels). Choose Connect, click to start a pipe and click again to finish. Circles along pipes create branches; nearby terminals snap. Red rings mark loose ends. Drag empty space to pan. Drag a part to move it with its pipes; Shift-drag detaches it. Drop a loose two-terminal part onto a highlighted pipe to insert it in series. Crossings do not connect.</p>
+        <p>Click a switch body to toggle it. A diode is a swing check valve that only opens with forward flow. Click a part or pipe to probe its voltage and current.</p>
+        <b>What the simulation assumes</b>
+        <p>Startup from zero stored energy. Educational switched RLC solver (backward Euler), not SPICE: DC and sine supplies, resistors, capacitors, inductors, 2–4 coupled windings (k = 1 by default), PWM switches and up to eight diodes (forward drop + 0.01 Ω, no reverse current or recovery). Wires are ideal. Leakage mode includes an inspectable primary RC snubber for recognized flyback and forward circuits. Saturation and reverse recovery are not modeled. Floating nodes and interrupted inductor current are reported rather than hidden.</p>
+        <p class="menu-note build-stamp" data-host="build"></p>
+      </div>
+    </details>
+
+    <span class="head-spacer"></span>
+    <button id="ed-arrange" class="head-button" type="button">Auto arrange</button>
+    <button id="ed-undo" class="head-button" type="button" aria-label="Undo">Undo <kbd>⌘Z</kbd></button>
+    <button id="ed-redo" class="head-button" type="button" aria-label="Redo">Redo <kbd>⇧⌘Z</kbd></button>
+    <button class="head-button" type="button" data-host="theme">Dark mode</button>
+  </header>
+
+  <div class="work inspector-hidden setup-hidden">
+  <aside class="model-bar setup-panel" aria-label="Simulation model">
+    <div class="setup-head"><b>Simulation setup</b><button type="button" data-host="setup-close" aria-label="Close simulation setup">×</button></div>
+    <div class="model-controls">
+      <form data-host="timing-form" class="timing-form"><b class="setup-section-title">Run length &amp; switching</b><div class="timing-length">
+        <label>Total time · ms<input data-host="sim-duration" type="number" min=".001" max="10000" step="any" required></label>
+        <label data-host="cycles-label">Cycles<input data-host="sim-cycles" type="number" min=".001" max="5000" step="any"></label></div>
+        <label>Pulse start (ms, non-PWM switches)<input data-host="pulse-start" type="number" min=".001" max="10000" step="any" required></label>
+        <label>Switch<select data-host="timing-switch"></select></label>
+        <div data-host="pwm-timing">
+          <label>Freq · kHz<input data-host="switch-frequency" type="number" min=".001" max="100" step="any"></label>
+          <label>Duty · %<input data-host="switch-duty" type="number" min=".001" max="99.999" step="any"></label>
+          <label>Phase · %<input data-host="switch-phase" type="number" min="0" max="99.999" step="any"></label>
+        </div>
+        <label data-host="pulse-timing">Pulse duration (ms)<input data-host="switch-pulse" type="number" min=".001" max="10000" step="any"></label>
+        <button type="submit">Apply timing</button>
+        <p class="menu-note" data-host="timing-note"></p>
+      </form>
+      <fieldset class="setup-group"><legend>Model fidelity</legend><div class="fidelity-options">
+      <button id="ed-model-ideal" type="button" aria-pressed="false">Ideal</button>
+      <button id="ed-model-ripple" type="button" aria-pressed="true">Ripple</button>
+      <button id="ed-model-leakage" type="button" aria-pressed="false">Leakage · experimental</button>
+      </div></fieldset>
+      <fieldset class="setup-group"><legend>Simulation</legend>
+      <label>Device losses <select id="ed-model-losses"><option value="ideal">Ideal conduction</option><option value="configured">Configured losses</option></select></label>
+      <label>Simulation window <select id="ed-model-view"><option value="startup">Startup</option><option value="settled">Settled cycles</option></select></label>
+      <label class="setup-overlay"><input id="ed-model-overlay" type="checkbox"> Course reference overlay</label>
+
+      </fieldset>
+      <details class="setup-visual" open><summary>Simulation appearance</summary><div class="setup-group">        <label>Pressure view <select id="ed-magnetic-mode"><option value="local">Winding-only gradient</option><option value="split">Two pressure regions</option><option value="circuit" selected>Circuit pressure</option></select></label>
+        <label>Color scale <select id="ed-pressure-scale"><option value="log">Soft logarithmic</option><option value="root">Square-root style</option><option value="linear">Linear</option></select></label>
+        <label>Contrast <span class="inline"><input id="ed-pressure-gain" type="range" min="0.5" max="4" step="0.1" value="2.5" aria-label="Pressure color contrast"><output id="ed-pressure-gain-label">2.5×</output></span></label>
+        <label>Color reference <select id="ed-reference"><option value="supply">Supply +</option><option value="return">Bottom return</option><option value="midpoint">Supply midpoint</option></select></label>
+        <label>Visual travel <input id="ed-travel" type="number" min=".25" max="3" step=".05" value="1.8"></label>
+        <output id="ed-pressure-range" class="menu-note"></output>
+        <p class="menu-note">Darker blue = higher relative pressure. Nonlinear scales exaggerate small differences; equal pressure keeps the same color.</p></div></details>
+      <details class="model-details"><summary>Model &amp; protection</summary>
+        <p>Ripple is the default. Ideal uses a periodic ripple-neglected course reduction where validated. Other circuits use ideal components with finite L/C dynamics, preserving charging and oscillations; the model note identifies this fallback. Ideal always uses ideal conduction. Ripple retains finite L/C and startup. Leakage is incomplete and experimental: only recognized flyback and forward circuits currently support its primary RC snubber. Every active mode drives water pressure, particles, stored charge, meters and plots.</p>
+        <label>Leakage coupling k <input id="ed-model-coupling" type="number" min=".001" max="1" step=".001" value=".98"></label>
+        <label>Snubber C (µF) <input id="ed-model-cap" type="number" min=".001" max="1000" step="any" value="5"></label>
+        <label>Snubber R (Ω) <input id="ed-model-resistance" type="number" min=".001" max="100000" step="any" value="8"></label>
+        <label>Minimum steps <input id="ed-model-steps" type="number" min="100" max="350000" step="100" value="5000"></label>
+        <p id="ed-model-support"></p>
+        <pre id="ed-model-equivalent"></pre>
+        <details><summary>Inspect effective circuit JSON</summary><pre id="ed-model-json"></pre></details>
+        <p>Ideal devices means zero diode drop/on resistance and zero switch on resistance. The source feed and snubber resistor remain explicit losses. Configured losses retains editable conduction parameters, including 0.01 Ω diode resistance by default. No recovery, avalanche, saturation or nonlinear Coss model.</p>
+      </details>
+    </div>
+    <p id="ed-model-note" role="status" aria-live="polite"></p>
+  </aside>
+
+    <aside class="builder" aria-label="Builder">
+      <div class="builder-head"><b>Builder</b><span data-host="part-count"></span><button type="button" data-host="builder-close" aria-label="Close builder">×</button></div>
+      <label class="mini-search">Find part<input type="search" data-host="part-search" placeholder="Type to filter"></label>
+      <div class="parts" data-host="parts">
+        <button type="button" data-part="source" data-keywords="supply pump battery voltage source dc ac sine"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#pump"/></svg><span>Supply</span></button>
+        <button type="button" data-part="resistor" data-keywords="resistor restriction load"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#restriction"/></svg><span>Resistor</span></button>
+        <button type="button" data-part="capacitor" data-keywords="capacitor accumulator spring piston"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#accumulator"/></svg><span>Capacitor</span></button>
+        <button type="button" data-part="inductor" data-keywords="inductor flywheel choke coil"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#flywheel"/></svg><span>Inductor</span></button>
+        <button type="button" data-part="diode" data-keywords="diode check valve rectifier"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#check-valve"/></svg><span>Diode</span></button>
+        <button type="button" data-part="switch" data-keywords="switch valve mosfet transistor pwm"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#shutoff-valve"/></svg><span>Switch</span></button>
+        <button type="button" data-part="coupled" data-keywords="transformer coupled inductor windings 1+1"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#coupled-wheels"/></svg><span>Coupled 1+1</span></button>
+        <button type="button" data-part="coupled3" data-keywords="transformer coupled reset winding forward 1+2"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#coupled-wheels"/></svg><span>Coupled 1+2</span></button>
+        <button type="button" data-part="coupled4" data-keywords="transformer coupled centre tap bridge 2+2"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#coupled-wheels"/></svg><span>Coupled 2+2</span></button>
+        <button type="button" data-part="flowmeter" data-keywords="meter flowmeter ammeter current pitot"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#gauge"/></svg><span>Flowmeter</span></button>
+        <button type="button" data-part="pressuremeter" data-keywords="meter pressure voltmeter voltage gauge"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#gauge"/></svg><span>Pressure</span></button>
+        <button type="button" data-part="load" data-keywords="load hose fountain resistor review"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#hose"/></svg><span>Hose load</span></button>
+        <button type="button" data-part="input" data-keywords="inlet connector port input"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#connector"/></svg><span>Inlet</span></button>
+        <button type="button" data-part="output" data-keywords="outlet connector port output"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#connector"/></svg><span>Outlet</span></button>
+        <button type="button" data-part="junction" data-keywords="junction tee node branch"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#tee"/></svg><span>Junction</span></button>
+      </div>
+      <!-- Editor-owned placement controls; the part buttons above drive them. -->
+      <div class="sr">
+        <label for="ed-palette">Part to place</label>
+        <select id="ed-palette"><option value="source">Supply</option><option value="resistor">Resistor</option><option value="load">Hose / fountain load · review</option><option value="flowmeter">Flowmeter · Pitot</option><option value="pressuremeter">Pressure meter</option><option value="input">Inlet connector</option><option value="output">Outlet connector</option><option value="capacitor">Capacitor · auto DC/AC</option><option value="switch">Switch</option><option value="inductor">Inductor</option><option value="diode">Diode</option><option value="coupled">Coupled · 1+1</option><option value="coupled3">Coupled · 1+2 / reset</option><option value="coupled4">Coupled · 2+2</option><option value="junction">Junction</option></select>
+        <button id="ed-add" type="button" aria-pressed="false" tabindex="-1">Place on canvas</button>
+      </div>
+      <p class="builder-note">Connect is active when you enter Build: click two fittings to draw a pipe. Choose a part to place it. <kbd>R</kbd> rotates; <kbd>Esc</kbd> returns to selection.</p>
+    </aside>
+
+    <div class="panel-resizer" role="separator" aria-label="Resize builder" aria-orientation="vertical" tabindex="0" data-host="resizer"></div>
+    <div class="panel-resizer setup-resizer" role="separator" aria-label="Resize simulation panel" aria-orientation="vertical" tabindex="0" data-host="setup-resizer"></div>
+
+    <section class="main">
+      <div class="canvas-area">
+        <div class="stage"><svg id="ed-canvas" tabindex="0" role="img" aria-label="Editable hydraulic circuit. Drag parts; choose Connect to draw pipes. Drag empty space to pan."></svg></div>
+
+        <div class="canvas-tools" role="toolbar" aria-label="Canvas tools">
+          <!-- Retained for the editor's control contract; Build drives Connect. -->
+          <button id="ed-pipe" type="button" aria-pressed="false" hidden tabindex="-1">Connect</button>
+          <button id="ed-minus" type="button" aria-label="Zoom out">−</button>
+          <b data-host="zoom">100%</b>
+          <button id="ed-plus" type="button" aria-label="Zoom in">+</button>
+          <button id="ed-fit" type="button" class="home-control" title="Home · fit circuit" aria-label="Fit circuit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5M5.5 9.5V21h5v-7h3v7h5V9.5"/></svg></button>
+        </div>
+
+        <div class="inspect-card sr" aria-hidden="true">
+          <div><b data-host="card-name">Nothing selected</b><span data-host="card-values">Click a part or pipe</span></div>
+        </div>
+
+        <div id="ed-status" class="status-line" aria-live="polite"></div>
+
+        <div id="ed-transfer" class="transfer" hidden>
+          <label for="ed-json">Circuit JSON · copy to keep, or paste to load</label>
+          <textarea id="ed-json" rows="9" spellcheck="false"></textarea>
+          <div class="row"><button id="ed-copy" type="button">Copy</button><button id="ed-download" type="button">Download</button><button id="ed-import" type="button">Load pasted JSON</button><button id="ed-browse" type="button">Choose file…</button><button id="ed-close-transfer" type="button">Close</button></div>
+          <div id="ed-transfer-status" class="hint" aria-live="polite"></div>
+          <input id="ed-file" type="file" accept=".json,application/json" hidden>
+        </div>
+      </div>
+
+      <div class="transport">
+        <button id="ed-play" class="play" type="button">Run</button>
+        <span id="ed-time" class="time"></span>
+        <input id="ed-scrub" type="range" min="0" max="10000" value="0" aria-label="Physical time">
+        <span class="duration" data-host="duration"></span>
+        <label>Speed <select data-host="speed"><option value="25">0.01×</option><option value="36.93">0.03×</option><option value="50" selected>0.1×</option><option value="61.93">0.3×</option><option value="75">1×</option><option value="86.93">3×</option><option value="100">10×</option></select></label>
+        <label class="loop">Loop <select data-host="loop"><option value="1">Continuous</option><option value="0">One run</option></select></label>
+        <button id="ed-reset" type="button">Reset</button>
+        <span class="sr"><input id="ed-speed" type="range" min="0" max="100" value="50" step="any" tabindex="-1" aria-hidden="true"><output id="ed-speed-label">0.1×</output></span>
+      </div>
+
+
+    </section>
+
+      <section class="waveforms" data-host="waveforms">
+        <header>
+          <button type="button" class="wave-toggle" data-host="wave-toggle" aria-expanded="true"><b>Waveforms</b><span>Voltage and current</span></button>
+
+        </header>
+        <div class="wave-body"><aside class="wave-sidebar" aria-label="Waveform settings and probe information"><b>Waveform details</b>          <div class="plot-controls">
+            <label>Waveform source <select data-host="plot-view"><option value="simulation">Simulation</option><option value="report">Teaching reference · full-bridge boost</option></select></label>
+            <label>Plots <select data-host="plot-scope"><option value="selected">Selected</option><option value="all">All components</option></select></label>
+            <label>Columns <select data-host="plot-columns"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></label>
+            <label class="reference-toggle"><input type="checkbox" data-host="plot-guides" checked> Reference levels</label>
+            <button type="button" data-host="plot-reset">Reset zoom</button>
+            <label class="signal-select">Probe <select data-host="signal"></select></label>
+          </div><p class="menu-note" data-host="report-availability"></p>          <div class="plot-view-note hint" data-host="plot-view-note" hidden></div>
+          <details class="wave-probe" open><summary>Probe information &amp; equations</summary><div class="level-strip" data-host="levels"></div>
+          <div class="equation-card" data-host="equation"></div>
+          <details class="calcs"><summary>Values &amp; calculations</summary><div id="ed-calcs"></div></details></details></aside><div class="wave-charts">
+          <div id="ed-plots" class="plots"></div>
+
+        </div></div>
+      </section>
+    <aside id="ed-inspector" class="inspector" hidden>
+      <div class="inspector-head"><div id="ed-selection">Select a component</div><button type="button" class="close" data-host="inspector-close" aria-label="Close properties">×</button></div>
+      <div id="ed-fields"></div>
+      <div class="row"><button id="ed-rotate" type="button">Rotate ↻</button><button id="ed-lock" type="button">Lock</button><button id="ed-delete" type="button">Delete</button></div>
+    </aside>
+  </div>
+
+  <nav class="mobile-dock" aria-label="Workspace modes">
+    <button type="button" class="active" data-dock="canvas">Canvas</button>
+    <button type="button" data-dock="build">Build</button>
+    <button type="button" data-dock="simulation">Simulation</button>
+    <button type="button" data-dock="inspect">Inspect</button>
+    <button type="button" data-dock="run" hidden>Run</button>
+    <button type="button" data-dock="signals">Signals</button>
+  </nav>
+
+  <div id="ed-tip" class="tip" hidden role="tooltip"></div>
+  <div id="ed-announce" class="sr" aria-live="polite"></div>
+</div>

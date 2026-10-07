@@ -41,6 +41,8 @@ header{background:var(--surface);border-bottom:1px solid var(--line)}
 h1{font-size:clamp(30px,5.4vw,46px);line-height:1.06;margin:0;font-weight:600;
   letter-spacing:-.02em;max-width:19ch;text-wrap:balance}
 .dek{font-size:19px;color:var(--ink-2);margin:0;max-width:56ch}
+.app-link{display:inline-block;width:fit-content;background:var(--accent);color:var(--surface);padding:10px 16px;border-radius:3px;font-weight:600;text-decoration:none}
+.app-link:hover{text-decoration:underline}
 .mapping{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px}
 .chip{font-family:"IBM Plex Mono",monospace;font-size:11.5px;background:var(--accent-soft);
   color:var(--accent);padding:4px 9px;border-radius:2px;white-space:nowrap}
@@ -84,6 +86,7 @@ footer{border-top:1px solid var(--line);margin-top:56px;padding-block:24px 60px;
     <h1>Power electronics you can actually see</h1>
     <p class="dek">A switching converter, drawn as a hydraulic circuit and solved as one —
       so you can watch where the energy goes instead of taking the equations on faith.</p>
+    <a class="app-link ui" href="app/">Open circuit simulator →</a>
     <div class="mapping">
       <span class="chip">pressure = voltage</span>
       <span class="chip">flow = current</span>
@@ -158,10 +161,11 @@ footer{border-top:1px solid var(--line);margin-top:56px;padding-block:24px 60px;
 
   <section class="col">
     <h2>Status</h2>
-    <p>Early. The buck converter above is the first circuit released publicly; boost,
-      buck–boost, flyback, forward, half bridge and full bridge exist and are being made
-      trustworthy one at a time. The model currently solves a steady periodic state —
-      start-up and load-step transients are the next substantial piece of work.</p>
+    <p>Early. The <a href="app/">circuit simulator</a> lets you edit circuits, run
+      startup simulations and explore ten converter and transformer presets with
+      synchronized hydraulic views and waveforms. Ripple is the default; Ideal
+      reductions are available for supported circuits, while Leakage remains
+      experimental. The buck demo above is a separate steady-periodic example.</p>
     <p>If you teach this material, or you remember
       <a href="https://www.research-collection.ethz.ch/handle/20.500.11850/203182">ETH Zurich's iPES</a>
       and have missed it since it went offline, I would genuinely like to hear from you.</p>
