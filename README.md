@@ -21,7 +21,14 @@ conversion as a hydraulic circuit.
 
 Open [inertance.org](https://inertance.org/) or go directly to the
 [working simulator](https://inertance.org/app/). GitHub Pages publishes `main`
-from the repository root, with HTTPS enforced.
+from the repository root, with HTTPS enforced. The independent
+[Hydraulic Analogy copy](https://hydraulicanalogy.com/) opens the same simulator
+on its own domain, with hourly/manual upstream synchronization. Inertance's
+public HTTPS is valid; its remaining DTU access issue is a network DNS block.
+
+The [hosting and publishing runbook](docs/DEPLOYMENT.md) records exact Porkbun
+DNS, Pages/certificate settings, changes made, release checks and the next app
+update. A private simulator push alone does not publish a new app.
 
 ## Rebuilding the demo
 
@@ -34,15 +41,24 @@ dev/
   inertance-site/       ← this repo
 ```
 
-For a release, commit the simulator sources in the private repo first, then run:
+For a release, commit and push relevant simulator sources privately first, then run:
 
 ```sh
 python3 update_from_simulator.py --release
 ```
 
 Review and commit the generated `app/` and `lab/` together with relevant site
-sources, then push `main`. Pushing publishes the site. The build records the
-private simulator revision in the app Help menu.
+sources, then push public `main`. Pushing publishes the primary site. Verify
+its Pages run and live app, then dispatch the mirror for an immediate update:
+
+```sh
+gh workflow run pages.yml --repo Lucasfrit/hydraulicanalogy-site
+```
+
+Otherwise it picks up primary `main` at the next scheduled hourly run, subject to
+GitHub delays/inactivity rules. Verify the mirror's `/release.json` against the
+primary public commit. The build records the private simulator revision in Help;
+that revision is different from the public/mirror repository commits.
 
 Rebuild the simulator app after changing `app-src/`:
 

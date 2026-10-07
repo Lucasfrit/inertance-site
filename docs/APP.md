@@ -5,6 +5,22 @@ website: the **real** editor and solver from the private `cwas` repo, running
 inside the *Compact hybrid* layout (concept 6 in `designs/`). It is not a mockup:
 every circuit on screen is simulated, drawn and plotted by the editor code.
 
+## Published status — 7 October 2026
+
+Both [inertance.org](https://inertance.org/) and
+[hydraulicanalogy.com](https://hydraulicanalogy.com/) open `/app/` directly over
+HTTPS; both have valid apex/www certificates and HTTPS enforcement. The current
+app stamp is `cwas 763d364`, containing runtime released at `91e6c45`. Private
+source commits alone do not update either site: build/check locally, push the
+primary generated app, then sync the independent mirror hourly or manually.
+Inertance remains blocked by DTU DNS; the second domain worked normally.
+
+[DEPLOYMENT.md](DEPLOYMENT.md) records the current hosting/Porkbun settings,
+certificate work, deployment evidence, remaining blocker and publishing steps.
+The historical local-only implementation notes are superseded by this release.
+
+## Local development
+
 Open it locally:
 
 ```sh
@@ -21,7 +37,7 @@ python3 -m http.server 4180 --directory .    # from inertance-site/
 | `app-src/host.js` | Glue: shell widgets ⇄ editor controls and `window.circuitEditor` API | yes |
 | `app-src/assets/` | Logo SVGs and `water-symbols.svg` (designs' detailed set + tee, hose, connector) | yes |
 | `build_app.py` | Inlines CSS, shell, the editor modules and host.js into `app/index.html`; copies assets | rarely |
-| `update_from_simulator.py` | One command: cwas dev pages + checks, both site builds, browser check | rarely |
+| `update_from_simulator.py` | One command: cwas dev pages + checks, both site builds, both browser checks | rarely |
 | `app/` | **Generated.** Never edit by hand | no |
 | `tools/check-app.cjs` | Headless-Chrome regression check of the built app | yes |
 | `../cwas/simulator/editor-*.js` | Editor, solver, routing, layout (private) | only for physics/editor behavior |
