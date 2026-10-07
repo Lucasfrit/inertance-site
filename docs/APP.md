@@ -49,7 +49,7 @@ checks, both repos; `--quick`, `--release`, `--full`). The full workflow and a
 ```
 app/index.html
  ├─ <style>  app-src/app.css
- ├─ d3 7.9.0 (jsDelivr)
+ ├─ d3 7.9.0 (local assets/vendor/d3.v7.9.0.min.js)
  ├─ app-src/shell.html          #circuit-editor root + all #ed-* controls
  ├─ <script> cwas editor modules, unchanged, same order as cwas build-editor.py
  │           → editor-ui.js binds to #ed-* ids and exposes window.circuitEditor
@@ -138,7 +138,8 @@ on it; keep that handler cheap (it can fire during drags).
   software-rendered Chrome: buck ~24 fps, full-bridge boost ~12 fps (the original
   editor page measures 23 and 5.7 fps under the same conditions). GPU browsers are
   faster; worker simulation and fewer nodes are editor work in `cwas`.
-- d3 comes from jsDelivr at run time; vendor it before calling the site offline-safe.
+- d3 7.9.0 is served from local `assets/vendor/` with its ISC license.
+  No service worker or offline installation is provided.
 - The phone header wraps to three rows; a compact overflow menu would reclaim space.
 - Keyboard: editor shortcuts (R, Esc, Delete, ⌘Z) work after interacting with the
   app; menus are `<details>` without arrow-key navigation. Needs an a11y pass.

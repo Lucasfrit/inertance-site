@@ -64,8 +64,8 @@ This final documentation update changes no runtime code.
 ## Remaining limitations
 
 This publishes the current early version. Leakage is experimental, browser
-rendering can be slow on complex circuits, and d3 is loaded from jsDelivr.
-The app therefore requires access to that CDN. Research, private planning,
+rendering can be slow on complex circuits. The later site identity update below
+serves d3 locally, removing the simulator app’s runtime CDN dependency. Research, private planning,
 local design experiments and review screenshots are excluded from this release.
 
 ## Repeat a release
@@ -79,3 +79,39 @@ set `SOURCE_REV` to the expected simulator short revision.
 Official setup references:
 - https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
 - https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https
+
+## Site identity and review improvements — later on 7 October 2026
+
+In response to the user's request to improve legitimacy for network reviews:
+- `/about/` states the educational purpose, author Lucas Wybrandt, public GitHub
+  contact route, source license and factual browser-data handling.
+- The landing footer, app Help and old lab link to that information.
+- All visitor pages identify the author and canonical HTTPS URL. The landing
+  page includes WebApplication metadata describing a free educational simulator.
+- `robots.txt` and `sitemap.xml` guide crawlers to the visitor pages. Crawler
+  exclusions for source/docs folders are not access restrictions.
+- d3 7.9.0 is pinned, unmodified and locally served for both apps, with its ISC
+  copyright/license and checksum retained. No runtime script CDN is needed.
+- The GitHub repository description, homepage and educational topics now match
+  the published purpose.
+- The simulator source is still unchanged from the original release. The new
+  build cites private `763d364` (a release-documentation commit containing the
+  same runtime sources as `91e6c45`).
+
+The existing GitHub-managed Let's Encrypt certificate is valid for both names;
+there is no certificate replacement required by these site improvements. Public
+site metadata is not proof that a security vendor will change its classification.
+The current DTU block was established by direct queries to DTU DNS and its
+`*.ait.dtu.dk` block-server certificate. DTU's classification vendor and the
+specific reason are unknown. No AIT/vendor support request has been submitted.
+The private `cwas/docs/DTU-ACCESS.md` contains the prepared AIT request.
+
+Talos documents analyst review of site content and purpose, but we have not
+confirmed that DTU uses Talos. Its lookup did not return a readable result via
+the available web tool. It would be misleading to report a vendor category or
+reputation score from that check.
+Reference: https://support.talosintelligence.com/docs/contentcat/
+
+Validation before this release: the full `--release` pipeline passed, as did
+the expanded live smoke check against a local server (About, sitemap and only
+same-origin runtime scripts, plus playback, desktop/phone and both themes).

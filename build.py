@@ -87,11 +87,13 @@ HEAD = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Buck converter, as water — Inertance</title>
 <meta name="description" content="An interactive buck converter shown as a hydraulic circuit: pressure is voltage, flow is current, inertia is inductance. Live waveforms alongside.">
+<meta name="author" content="Lucas Wybrandt">
+<link rel="canonical" href="https://inertance.org/lab/">
 <link rel="icon" type="image/svg+xml" href="../app/assets/inertance-pipe-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="../assets/vendor/d3.v7.9.0.min.js"></script>
 <style>%s</style>
 </head>
 <body>
@@ -106,6 +108,7 @@ HEAD = """<!doctype html>
 """ % SHIM
 
 FOOT = """
+<p><a href="../about/">About, contact &amp; privacy</a></p>
 <div class="caveat">
   <strong>Where this analogy lies to you.</strong>
   Hydraulic resistance is genuinely nonlinear — real pipe flow shifts between laminar and
