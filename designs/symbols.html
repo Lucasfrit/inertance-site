@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Inertance · Water-analogy symbols</title>
+  <link rel="icon" type="image/svg+xml" href="assets/inertance-pipe-mark.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="symbol-page" data-symbol-set="detailed">
+  <header class="symbol-page-head">
+    <a class="symbol-brand logo-pair" href="./#compact/laptop" aria-label="Inertance layout concepts"><img class="logo-light" src="assets/inertance-pipe-wordmark.svg" alt="Inertance"><img class="logo-dark" src="assets/inertance-pipe-wordmark-reversed.svg" alt=""></a>
+    <div><span class="eyebrow">Component language</span><h1>Water-analogy symbols</h1><p>One visual vocabulary for building, inspecting, and teaching circuits.</p></div>
+    <div class="symbol-actions"><div class="symbol-set-toggle" aria-label="Symbol detail"><button type="button" data-symbol-detail="compact">Compact</button><button type="button" class="active" data-symbol-detail="detailed">Detailed</button></div><button type="button" data-symbol-theme>Dark mode</button></div>
+  </header>
+  <main class="symbol-sheet">
+    <article><svg class="water-symbol symbol-large" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#pump"/></svg><div><h2>Pump</h2><b>Voltage source</b><p>Pressure rise corresponds to electrical potential.</p></div></article>
+    <article><svg class="water-symbol symbol-large" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#restriction"/></svg><div><h2>Restriction</h2><b>Resistor</b><p>A narrow passage creates pressure loss as flow increases.</p></div></article>
+    <article><svg class="water-symbol symbol-large" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#accumulator"/></svg><div><h2>Accumulator</h2><b>Capacitor</b><p>An elastic chamber stores volume and pressure.</p></div></article>
+    <article><svg class="water-symbol symbol-large" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#flywheel"/></svg><div><h2>Flywheel</h2><b>Inductor</b><p>Rotating inertia resists changes in flow.</p></div></article>
+    <article><svg class="water-symbol symbol-large" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#check-valve"/></svg><div><h2>Check valve</h2><b>Diode</b><p>Flow passes in one direction and blocks in reverse.</p></div></article>
+    <article><svg class="water-symbol symbol-large" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#shutoff-valve"/></svg><div><h2>Shutoff valve</h2><b>Switch</b><p>A controlled valve opens or closes the path.</p></div></article>
+    <article><svg class="water-symbol symbol-large" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#coupled-wheels"/></svg><div><h2>Coupled wheels</h2><b>Transformer</b><p>Coupled rotors exchange pressure and flow by a ratio.</p></div></article>
+    <article><svg class="water-symbol symbol-large" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#gauge"/></svg><div><h2>Gauge</h2><b>Probe / meter</b><p>A dial reads pressure or flow without changing the model.</p></div></article>
+  </main>
+  <footer class="symbol-notes"><b>Design rules</b><span>Monochrome outline · 40×24 viewbox · horizontal pipe terminals · readable at 18px · no KiCad assets or licensing dependency</span></footer>
+  <script>
+    const themeButton=document.querySelector('[data-symbol-theme]');
+    themeButton.addEventListener('click',()=>{const dark=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=dark?'dark':'';themeButton.textContent=dark?'Light mode':'Dark mode'});
+    document.querySelectorAll('[data-symbol-detail]').forEach(button=>button.addEventListener('click',()=>{
+      const set=button.dataset.symbolDetail;
+      document.body.dataset.symbolSet=set;
+      document.querySelectorAll('[data-symbol-detail]').forEach(item=>item.classList.toggle('active',item===button));
+      document.querySelectorAll('.symbol-sheet use').forEach(use=>{const id=use.getAttribute('href').split('#')[1];use.setAttribute('href',`assets/water-symbols${set==='detailed'?'-detailed':''}.svg?v=2#${id}`)});
+    }));
+  </script>
+</body>
+</html>

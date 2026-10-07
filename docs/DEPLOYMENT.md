@@ -3,6 +3,16 @@
 Verified 7 October 2026. This is the current configuration; the release history
 below records the work that established it.
 
+## Current app release — 7 October 2026
+
+The latest app is built from private simulator commit `d0bba0c`. It includes
+experimental native KiCad/SPICE netlist import, steady-state Ripple with advanced
+Transients/Leakage controls, curated example layouts/reset and merged particle
+streams. Optional Umami collection requires consent and respects DNT/GPC;
+production smoke checks opt out and generate no usage events. Half-bridge
+steady-state convergence remains limited; Transients is available for inspection.
+The original deployment snapshots below describe the earlier runtime.
+
 ## Current status
 
 | Item | inertance.org | hydraulicanalogy.com |
@@ -29,7 +39,7 @@ Example: `http://www.inertance.org/?entry=check#fullboost` reaches
 `https://inertance.org/app/?entry=check#fullboost` when the network resolves the
 public site correctly. DTU interception occurs before these site redirects.
 
-The published app Help/source stamp is `cwas 763d364 · built 2026-10-07`.
+The initial published app Help/source stamp was `cwas 763d364 · built 2026-10-07`.
 That private documentation revision has the same simulator runtime as
 `91e6c45d5d134743116d1f381464a1d8baca4831`. A later documentation-only private
 commit does not mean the live runtime is out of date. Before this runbook update,

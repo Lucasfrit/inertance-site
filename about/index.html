@@ -8,6 +8,7 @@
 <meta name="author" content="Lucas Wybrandt">
 <link rel="canonical" href="https://inertance.org/about/">
 <link rel="icon" type="image/svg+xml" href="../app/assets/inertance-pipe-mark.svg">
+<link rel="stylesheet" href="../assets/analytics/analytics.css">
 <style>
 :root{color-scheme:light dark;--bg:#fff;--ink:#17252e;--muted:#4b606b;--link:#086a9f;--line:#d3dee5}
 @media(prefers-color-scheme:dark){:root{--bg:#10181d;--ink:#e4edf2;--muted:#b1c2cc;--link:#78c6f2;--line:#334650}}
@@ -23,11 +24,15 @@
 <h2>Contact and source code</h2>
 <p>For questions, feedback or bug reports, <a href="https://github.com/Lucasfrit/inertance-site/issues">open an issue in the public GitHub repository</a>. Reports there are public; please avoid sharing personal information or confidential circuit files.</p>
 <p>The <a href="https://github.com/Lucasfrit/inertance-site">website repository</a> includes the published simulator JavaScript and website source. Simulator code is licensed under <a href="../LICENSE">AGPL-3.0-or-later</a>. Copyright © 2026 Lucas Wybrandt.</p>
-<h2>Privacy and browser data</h2>
-<p>Simulations run in your browser. Circuit JSON files you open are read locally, and circuit downloads are created locally. The simulator contains no circuit-upload service, account system, advertising or analytics scripts.</p>
+<h2 id="privacy">Privacy and browser data</h2>
+<p>Simulations run in your browser. Circuit and netlist files you open are read locally, and circuit downloads are created locally. The simulator contains no circuit-upload service, account system or advertising.</p>
 <p>The app saves display and playback preferences in your browser’s local storage. You can remove these by clearing this site’s browser data.</p>
-<p>GitHub Pages hosts the site and receives normal web requests. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub’s privacy statement</a> for its handling of visitor data. The landing page and older buck demo request fonts from Google Fonts. The simulator’s d3 chart library is served from this website.</p>
+<p>Optional usage analytics helps Lucas Wybrandt understand visits and which features people use. It contacts <a href="https://umami.is/privacy">Umami Cloud</a> only after you allow it. The analytics website uses Umami’s EU data region and the free plan’s six-month retention. Umami is a US-based provider; choosing an EU region does not mean all processing is exclusively within the EU.</p>
+<p>We send only the site hostname, the page path (/app/ or /about/) and fixed action names: starting a simulation, choosing a built-in preset or model mode, editing a circuit, arranging or resetting a view, import preview/apply outcomes and JSON copy/download actions. We never send circuit contents, component values, filenames, pasted text, error messages, URL queries or hashes, referrers, or personal identifiers. The redirect page and older demo have no analytics.</p>
+<p>Umami receives your IP address and browser’s User-Agent with normal network requests and uses them to estimate visits, devices and location. Visitor numbers are approximate. We do not store analytics cookies or visitor IDs in your browser, use session replay, or save identifiers returned by Umami. The dashboard is private. Your allow/decline choice is saved in local storage for 180 days, separately on each domain. Do Not Track and Global Privacy Control keep analytics off. Declining does not affect the simulator.</p>
+<p><button type="button" data-analytics-settings>Analytics settings</button> lets you withdraw consent at any time. This stops future analytics requests; it cannot recall requests already received by Umami. For questions about data handling, contact Lucas through the public repository linked above without posting private circuit files.</p>
+<p>GitHub Pages hosts the site and receives normal web requests. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub’s privacy statement</a> for its handling of visitor data. The older buck demo requests fonts from Google Fonts. The simulator’s d3 chart library is served from this website.</p>
 <h2>For teachers and site reviewers</h2>
 <p>The site’s purpose is education in electronics and electrical circuits. It offers interactive browser simulations, editable examples and waveform explanations. The canonical address is <a href="https://inertance.org/">https://inertance.org/</a>; the working app is at <a href="../app/">/app/</a>.</p>
 <footer>Updated 7 October 2026 · Inertance · Lucas Wybrandt</footer>
-</main></body></html>
+</main><script src="../assets/analytics/config.js"></script><script src="../assets/analytics/analytics.js"></script></body></html>

@@ -169,7 +169,7 @@ function refreshTiming(doc,model){const switches=doc.components.filter(c=>c.type
  host('sim-duration').value=fmt((doc.settings.duration||model?.duration||.04)*1000,6);host('pulse-start').value=fmt(doc.settings.loadOn*1000,6);host('pulse-start').closest('label').hidden=!switches.some(c=>!c.pwm);host('pulse-start').disabled=!switches.some(c=>!c.pwm);populateSwitchTiming(doc);
  host('sim-duration').disabled=!!model?.metadata?.reduced;
  updateCycles();
- host('timing-note').textContent=(model?.metadata?.reduced?'Ideal reduction: fixed four-cycle display. Use Ripple for custom run length. ':'Cycles use the selected PWM switch. Apply timing to rerun. ')+(doc.settings.manualEvents?.length?'Manual overrides remain active; restore automatic pulse in Properties.':'');
+ host('timing-note').textContent=(model?.metadata?.reduced?'Ideal reduction: fixed four-cycle display. ':model?.metadata?.view==='settled'?'Ripple: four verified cycles are displayed. Total time is the initial settling horizon; the bounded solve may extend it. Enable advanced Transients to show the full run. ':'Transients: total time sets the startup run. Cycles use the selected PWM switch. Apply timing to rerun. ')+(doc.settings.manualEvents?.length?'Manual overrides remain active; restore automatic pulse in Properties.':'');
 }
 host('sim-duration').addEventListener('input',()=>updateCycles());
 host('sim-cycles').addEventListener('input',()=>updateCycles(true));

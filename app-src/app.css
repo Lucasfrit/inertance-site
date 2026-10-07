@@ -395,3 +395,11 @@ body.page-scroll{overflow:auto}
  .builder,.inspector{order:4}
  .panel-resizer{display:none!important}
 }
+
+.external-import{width:min(720px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box;padding:20px;border:1px solid #88939a;border-radius:10px;background:#fff;color:#19242b;font:14px/1.5 system-ui,sans-serif;box-shadow:0 16px 60px #0005}
+.external-import::backdrop{background:#0007}.external-import h2{margin:0 0 10px}.external-import>label{display:block;margin-top:10px}.external-import summary{cursor:pointer;font-weight:600}.external-import textarea{display:block;box-sizing:border-box;width:100%;resize:vertical;font:12px/1.4 ui-monospace,monospace;margin:8px 0}.external-import pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace}.external-import .row{display:flex;flex-wrap:wrap;gap:8px}.external-import button,.external-import select{font:inherit;padding:7px}.external-import code{overflow-wrap:anywhere}
+
+/* Advanced physics: startup and magnetic leakage are independent controls. */
+#circuit-editor .setup-panel .model-transients{justify-content:flex-start;flex-wrap:nowrap;align-items:flex-start;line-height:1.4}
+#circuit-editor .model-transients input{flex:none;margin-top:2px}
+#circuit-editor .model-details #ed-model-leakage{width:100%;text-align:left}

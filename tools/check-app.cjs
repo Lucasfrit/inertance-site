@@ -51,7 +51,7 @@ const server = http.createServer((req, res) => {
   assert.equal(await page.locator('.waveforms > header .plot-controls').count(),1,'waveform controls use empty header space on desktop');
   assert(await page.evaluate(() => !!circuitEditor.model), 'buck simulates');
   assert.equal(await page.evaluate(() => circuitEditor.model.metadata.mode), 'ripple', 'fresh app defaults to Ripple');
-  assert.match(await page.textContent('#ed-model-leakage'), /experimental/);
+  assert.match(await page.textContent('#ed-model-leakage'), /finite coupling/);
   assert.match(await page.textContent('[data-host=levels]'), /V̄/, 'level strip shows statistics');
   assert.match(await page.textContent('[data-host=build]'), /^Simulator: cwas \w+/, 'build stamp shown in Help');
 
@@ -90,7 +90,8 @@ const server = http.createServer((req, res) => {
   await page.fill('[data-host=switch-duty]','40');
   await page.locator('[data-host=timing-form]').getByRole('button',{name:'Apply timing',exact:true}).click();
   assert.equal(await page.evaluate(()=>circuitEditor.document.settings.duration),.06,'total time saved');
-  assert.equal(await page.evaluate(()=>circuitEditor.model.duration),.06,'total time used by solver');
+  assert.equal(await page.evaluate(()=>circuitEditor.model.duration),.002,'four verified cycles displayed');
+  assert(await page.evaluate(()=>circuitEditor.model.settling.solvedDuration>=.06),'settling honors initial horizon');
   assert.equal(await page.evaluate(()=>circuitEditor.document.components.find(c=>c.id==='Q1').pwm.frequency),2000,'PWM timing updated');
   await page.click('#ed-undo');
   await page.screenshot({ path: path.join(out, 'app-panels-desktop.png') });

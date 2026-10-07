@@ -1,0 +1,1 @@
+window.InertanceAnalyticsConfig = Object.freeze({"website": "811e834e-5f0f-433b-a8a5-62321a08c80a"});

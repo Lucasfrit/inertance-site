@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+
+    <!-- Centrifugal pressure pump: casing, hub, curved impeller vanes, and flow cue. -->
+    <symbol id="pump" viewBox="0 0 48 32">
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M2 16h9m26 0h9"/>
+      <circle fill="currentColor" fill-opacity=".08" stroke="none" cx="24" cy="16" r="11"/>
+      <circle fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" cx="24" cy="16" r="11"/>
+      <circle fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" cx="24" cy="16" r="2.3"/>
+      <path fill="none" stroke="#48a9c9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M24 13.7c4-4 7-1 7-1M26.3 16c4 4 1 7 1 7M24 18.3c-4 4-7 1-7 1M21.7 16c-4-4-1-7-1-7"/>
+      <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".72" d="M13 9.5c-1.7 1.8-2.7 4-2.8 6.5m27.6 0h5m-2-2 2 2-2 2"/>
+    </symbol>
+
+    <!-- Adjustable restriction: converging nozzle, orifice plate, and turbulent wake. -->
+    <symbol id="restriction" viewBox="0 0 48 32">
+      <path fill="currentColor" fill-opacity=".08" stroke="none" d="M2 7h13l7 6h4l7-6h13v18H33l-7-6h-4l-7 6H2Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M2 7h13l7 6h4l7-6h13M2 25h13l7-6h4l7 6h13"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M22 10v12m4-12v12"/>
+      <path fill="none" stroke="#48a9c9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M5 16h13m12 0h13m-4-2.5 4 2.5-4 2.5"/>
+      <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".72" d="M31 12.5c2-1.5 3 1.5 5 0s3 1.5 5 0M31 19.5c2 1.5 3-1.5 5 0s3-1.5 5 0"/>
+    </symbol>
+
+    <!-- Bladder accumulator: pressure vessel, gas spring, membrane, and stored fluid. -->
+    <symbol id="accumulator" viewBox="0 0 48 32">
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M2 20h12m20 0h12"/>
+      <path fill="currentColor" fill-opacity=".08" stroke="none" d="M14 5c0-2 2-3 4-3h12c2 0 4 1 4 3v22c0 2-2 3-4 3H18c-2 0-4-1-4-3Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M18 2h12c2.2 0 4 1.8 4 4v20c0 2.2-1.8 4-4 4H18c-2.2 0-4-1.8-4-4V6c0-2.2 1.8-4 4-4Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M15 18c4-3.5 14-3.5 18 0"/>
+      <path fill="#48a9c9" fill-opacity=".58" stroke="none" d="M15.6 20h16.8v5.5a2.8 2.8 0 0 1-2.8 2.8H18.4a2.8 2.8 0 0 1-2.8-2.8Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".72" d="m24 4-2 3 4 3-4 3 2 2m-6-9h2m8 0h2"/>
+      <path fill="none" stroke="#48a9c9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M3 20h10m22 0h10"/>
+    </symbol>
+
+    <!-- Hydraulic flywheel: heavy rim, spokes, hub bearings, and rotation cue. -->
+    <symbol id="flywheel" viewBox="0 0 48 32">
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M2 16h9m26 0h9"/>
+      <circle fill="currentColor" fill-opacity=".08" stroke="none" cx="24" cy="16" r="11.5"/>
+      <circle fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" cx="24" cy="16" r="11.5"/>
+      <circle fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".72" cx="24" cy="16" r="8.5"/>
+      <circle fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" cx="24" cy="16" r="2.4"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M24 13.6V7.5m2.1 7.3 5.3-3m-5.3 5.4 5.3 3m-7.4-1.8v6.1m-2.1-7.3-5.3 3m5.3-5.4-5.3-3"/>
+      <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".72" d="M13.5 9A13 13 0 0 1 20 3m-2.5-.4L20 3l-1 2.3"/>
+    </symbol>
+
+    <!-- Swing check valve: body, hinged flap, seat, pivot, and permitted direction. -->
+    <symbol id="check-valve" viewBox="0 0 48 32">
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M2 16h8m28 0h8M10 8h28v16H10Z"/>
+      <path fill="currentColor" fill-opacity=".08" stroke="none" d="M11.5 9.5h25v13h-25Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M31 10v12M18 10l11 6-11 6Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".72" d="M18 10h7m-7 0-2.5 2.5"/>
+      <circle fill="currentColor" stroke="none" cx="18" cy="10" r="1.7"/>
+      <path fill="none" stroke="#48a9c9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M4 16h11m19 0h10m-4-2.5 4 2.5-4 2.5"/>
+    </symbol>
+
+    <!-- Hand shutoff valve: valve body, opposing gates, stem, and wheel handle. -->
+    <symbol id="shutoff-valve" viewBox="0 0 48 32">
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M2 19h10m24 0h10M12 12l12 7-12 7Zm24 0-12 7 12 7Z"/>
+      <path fill="currentColor" fill-opacity=".08" stroke="none" d="m14 14 10 5-10 5Zm20 0-10 5 10 5Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M24 6v10m-8-10h16M19 3h10v6H19Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".72" d="M24 3v6m-5-3h10"/>
+      <path fill="none" stroke="#48a9c9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M3 19h8m26 0h8"/>
+    </symbol>
+
+    <!-- Fluid transformer: unequal impellers joined by a mechanical shaft. -->
+    <symbol id="coupled-wheels" viewBox="0 0 48 32">
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M2 17h6m32 0h6M17 17h14"/>
+      <circle fill="currentColor" fill-opacity=".08" stroke="none" cx="15" cy="17" r="10"/>
+      <circle fill="currentColor" fill-opacity=".08" stroke="none" cx="34" cy="17" r="7"/>
+      <circle fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" cx="15" cy="17" r="10"/>
+      <circle fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" cx="34" cy="17" r="7"/>
+      <circle fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" cx="15" cy="17" r="2"/><circle fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" cx="34" cy="17" r="1.7"/>
+      <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".72" d="M15 15 15 8m1.7 7.9 5-4.8m-5 7 5 4.8M15 19v7m-1.7-7.9-5 4.8m5-7-5-4.8M34 15.3V11m1.5 4.8 3-3m-3 5.4 3 3M34 18.7V23m-1.5-4.8-3 3m3-5.4-3-3"/>
+      <path fill="none" stroke="#48a9c9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M3 17h5m32 0h5"/>
+    </symbol>
+
+    <!-- Pressure/flow gauge: pipe tap, dial graduations, needle, and flow cue. -->
+    <symbol id="gauge" viewBox="0 0 48 32">
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M2 27h44M24 27v-4"/>
+      <circle fill="currentColor" fill-opacity=".08" stroke="none" cx="24" cy="13" r="10"/>
+      <circle fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" cx="24" cy="13" r="10"/>
+      <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".72" d="M17 18.5 15.5 20M18.5 8 17 6.5M24 6V3.8M29.5 8 31 6.5M31 18.5l1.5 1.5"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="m24 13 5-5"/>
+      <circle fill="currentColor" stroke="none" cx="24" cy="13" r="1.7"/>
+      <path fill="none" stroke="#48a9c9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M4 27h15m10 0h15m-4-2.2 4 2.2-4 2.2"/>
+    </symbol>
+  </defs>
+</svg>

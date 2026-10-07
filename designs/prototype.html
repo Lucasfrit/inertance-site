@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1727">
+  <title>Inertance · Layout Lab</title>
+  <link rel="icon" type="image/svg+xml" href="assets/inertance-pipe-mark.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="labbar">
+    <a class="brand" href="#workbench" aria-label="Inertance layout lab home">
+      <img class="brand-mark brand-logo" src="assets/inertance-pipe-mark-reversed.svg" alt=""><span>Inertance <small>Layout lab</small></span>
+    </a>
+    <nav class="concept-nav" aria-label="Choose a layout concept">
+      <button data-layout="workbench"><b>1</b><span>Workbench</span></button>
+      <button data-layout="studio"><b>2</b><span>Canvas studio</span></button>
+      <button data-layout="guided"><b>3</b><span>Guided lab</span></button>
+      <button data-layout="analysis"><b>4</b><span>Analysis split</span></button>
+      <button data-layout="focus"><b>5</b><span>Focus layers</span></button>
+      <button data-layout="compact"><b>6</b><span>Compact hybrid</span></button>
+    </nav>
+    <button class="feedback" data-action="notes">Compare layouts</button>
+  </header>
+
+  <main id="concepts">
+    <section class="concept workbench" data-concept="workbench">
+      <header class="appbar">
+        <div><b>Forward converter</b><span class="saved">Saved just now</span></div>
+        <div class="app-actions"><button>Examples</button><button data-action="new">New circuit</button><button>Open</button><button>Save</button><button class="primary" data-action="run">▶ Run</button></div>
+      </header>
+      <div class="workspace-grid">
+        <aside class="library panel">
+          <div class="panel-title"><span>Build</span><button title="Collapse panel">‹</button></div>
+          <label class="search"><span>⌕</span><input placeholder="Find a component"></label>
+          <p class="eyebrow">Components</p>
+          <div class="component-grid">
+            <button data-component="Supply"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#pump"/></svg>Supply</button><button data-component="Resistor"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#restriction"/></svg>Resistor</button>
+            <button data-component="Capacitor"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#accumulator"/></svg>Capacitor</button><button data-component="Inductor"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#flywheel"/></svg>Inductor</button>
+            <button data-component="Diode"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#check-valve"/></svg>Diode</button><button data-component="Switch"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#shutoff-valve"/></svg>Switch</button>
+            <button data-component="Transformer"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#coupled-wheels"/></svg>Coupled</button><button data-component="Meter"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#gauge"/></svg>Meter</button>
+          </div>
+          <p class="eyebrow">Tools</p>
+          <div class="tool-list"><button class="active">↖ Select</button><button>⌁ Draw pipe</button><button>✣ Junction</button><button>⌗ Auto-arrange</button></div>
+        </aside>
+        <section class="stage panel">
+          <div class="stagebar"><div><button title="Undo">↶</button><button title="Redo">↷</button><span></span><button>−</button><b>88%</b><button>+</button><button>Fit</button></div><div class="mode-switch"><button class="active">Build</button><button>Explore</button></div></div>
+          <div class="circuit-view"><img src="assets/circuit-canvas.png" alt="Hydraulic forward converter circuit"></div>
+          <div class="statusline"><span><i></i> Circuit ready</span><span>12 components · 15 pipes</span><span>No errors</span></div>
+        </section>
+        <aside class="inspector panel">
+          <div class="panel-title"><span>Inspector</span><button>•••</button></div>
+          <div class="selected-card"><span class="part-icon"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#coupled-wheels"/></svg></span><div><b data-selected-name>Transformer T1</b><small>Coupled windings</small></div></div>
+          <label>Primary inductance<div class="field"><input value="20"><span>mH</span></div></label>
+          <label>Turns ratio<div class="ratio"><input value="1"><span>:</span><input value="1"><span>:</span><input value="1"></div></label>
+          <label>Coupling <div class="field"><input value="1.000"><span>k</span></div></label>
+          <div class="row-buttons"><button>↻ Rotate</button><button>⌑ Lock</button></div>
+          <div class="inspector-note"><b>Ideal coupling</b><span>No leakage inductance is modeled.</span></div>
+          <button class="danger">Delete component</button>
+        </aside>
+        <section class="timeline panel">
+          <div class="transport"><button class="play" data-action="run">▶</button><b data-run-label>Run simulation</b><span>0.158 ms</span><input type="range" min="0" max="100" value="34"><select><option>0.1×</option><option>0.5×</option><option>1×</option></select></div>
+          <div class="plot-tabs"><button class="active">Waveforms</button><button>Equations</button><button>Energy</button><button>Events</button><button class="dock-action">Expand ↗</button></div>
+          <div class="plot-row"><div class="plot"><span>T1 · primary voltage</span><svg viewBox="0 0 500 90" preserveAspectRatio="none"><path d="M0 74 L42 74 L42 18 L83 18 L83 74 L125 74 L125 18 L167 18 L167 74 L208 74 L208 18 L250 18 L250 74 L292 74 L292 18 L333 18 L333 74 L375 74 L375 18 L417 18 L417 74 L458 74 L458 18 L500 18"/></svg></div><div class="plot orange"><span>T1 · primary current</span><svg viewBox="0 0 500 90" preserveAspectRatio="none"><path d="M0 73 C50 72 50 18 100 20 S150 73 200 70 S250 18 300 22 S350 73 400 70 S450 18 500 21"/></svg></div></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="concept studio" data-concept="studio">
+      <header class="studio-top"><button class="project-name">Forward converter⌄</button><div class="studio-tools"><button class="active">↖</button><button>⌁</button><button>✣</button><button>↶</button><button>↷</button></div><div><button data-action="new">New</button><button class="run-pill" data-action="run">▶ Simulate</button></div></header>
+      <div class="studio-canvas">
+        <img src="assets/circuit-canvas.png" alt="Hydraulic forward converter circuit">
+        <aside class="floating-palette"><button data-component="Supply"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#pump"/></svg><span>Supply</span></button><button data-component="Resistor"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#restriction"/></svg><span>Resistor</span></button><button data-component="Capacitor"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#accumulator"/></svg><span>Capacitor</span></button><button data-component="Inductor"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#flywheel"/></svg><span>Inductor</span></button><button data-component="Diode"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#check-valve"/></svg><span>Diode</span></button><button data-component="Switch"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#shutoff-valve"/></svg><span>Switch</span></button><button><span>More</span></button></aside>
+        <div class="floating-inspector"><header><div><b data-selected-name>T1 transformer</b><span>Coupled windings</span></div><button>×</button></header><div class="quick-fields"><label>L₁ <span>20 mH</span></label><label>Ratio <span>1 : 1 : 1</span></label><label>k <span>1.000</span></label></div><button class="text-button">Open full inspector</button></div>
+        <div class="zoom-dock"><button>−</button><span>88%</span><button>+</button><button>Fit</button></div>
+        <div class="transport-float"><button data-action="run">▶</button><span>0.158 ms</span><input type="range" value="34"><select><option>0.1×</option><option>1×</option></select><button data-action="panel">⌁ Signals</button></div>
+        <aside class="signal-drawer">
+          <header><b>Live signals</b><button data-action="panel">×</button></header>
+          <div class="mini-reading"><span>Primary voltage</span><b>11.85 V</b></div><div class="spark"><i></i></div>
+          <div class="mini-reading"><span>Primary current</span><b>−0.14 A</b></div><div class="spark orange"><i></i></div>
+          <button class="full-width">Open analysis workspace</button>
+        </aside>
+      </div>
+    </section>
+
+    <section class="concept guided" data-concept="guided">
+      <header class="guided-top"><div class="guided-brand"><span>⌁</span><div><b>Inertance</b><small>Forward converter lesson</small></div></div><div class="progress"><span>3 of 5</span><i><b></b></i></div><button>Exit lesson</button></header>
+      <div class="guided-grid">
+        <aside class="steps">
+          <p class="eyebrow">Build & observe</p>
+          <ol><li class="done"><i>✓</i><div><b>Meet the circuit</b><span>Identify the energy path</span></div></li><li class="done"><i>✓</i><div><b>Set the input</b><span>12 V DC supply</span></div></li><li class="current"><i>3</i><div><b>Watch energy transfer</b><span>Run one switching cycle</span></div></li><li><i>4</i><div><b>Introduce losses</b><span>Compare ideal and real</span></div></li><li><i>5</i><div><b>Try your own values</b><span>Open the full workbench</span></div></li></ol>
+          <button class="secondary" data-action="new">Start a different circuit</button>
+        </aside>
+        <section class="guided-stage">
+          <div class="guided-canvas"><img src="assets/circuit-canvas.png" alt="Hydraulic forward converter circuit"><div class="callout"><span>1</span><b>Energy crosses the coupled windings</b><small>The gears show the turns ratio; water flow shows winding current.</small></div></div>
+          <div class="guided-transport"><button class="big-run" data-action="run">▶ Run one cycle</button><button>↺ Reset</button><input type="range" value="40"><span>0.158 ms</span></div>
+        </section>
+        <aside class="explain">
+          <p class="eyebrow">What to notice</p><h2>Pressure transfers before water flows</h2><p>The secondary winding can have voltage even when its current is zero. Pressure represents voltage; particle motion represents current.</p>
+          <div class="equation-card"><span>Transformer relation</span><math><mfrac><msub><mi>V</mi><mn>1</mn></msub><msub><mi>V</mi><mn>2</mn></msub></mfrac><mo>=</mo><mfrac><msub><mi>N</mi><mn>1</mn></msub><msub><mi>N</mi><mn>2</mn></msub></mfrac></math><small>For this circuit: 1 : 1</small></div>
+          <div class="guided-reading"><span>At the cursor</span><div><b>11.85 V</b><small>primary</small></div><div><b>11.54 V</b><small>secondary</small></div></div>
+          <button class="primary wide">Next: introduce losses</button>
+        </aside>
+      </div>
+    </section>
+
+    <section class="concept analysis" data-concept="analysis">
+      <header class="analysis-top"><div><span class="analysis-logo">CW</span><select><option>Forward converter</option><option>Buck converter</option></select></div><div class="segmented"><button class="active">Build</button><button>Simulate</button><button>Analyze</button></div><div><button data-action="new">New</button><button>Save</button><button class="primary" data-action="run">▶ Run</button></div></header>
+      <div class="analysis-body">
+        <section class="analysis-left">
+          <div class="compact-tools"><select><option>＋ Add component</option><option>Supply</option><option>Resistor</option></select><button>⌁ Pipe</button><button>⌗ Arrange</button><span></span><button>↶</button><button>↷</button><button>Fit</button></div>
+          <div class="analysis-canvas"><img src="assets/circuit-canvas.png" alt="Hydraulic forward converter circuit"></div>
+          <div class="analysis-play"><button data-action="run">▶</button><button>↺</button><span>0.158 ms</span><input type="range" value="34"><select><option>0.1×</option></select></div>
+        </section>
+        <section class="analysis-right">
+          <div class="analysis-tabs"><button class="active" data-tab="signals">Signals</button><button data-tab="equations">Equations</button><button data-tab="parameters">Parameters</button><button data-tab="settings">Settings</button></div>
+          <div class="analysis-pane active" data-pane="signals">
+            <div class="signal-head"><div><b>T1 · primary voltage</b><span>11.847 V at 0.158 ms</span></div><button>＋ Add signal</button></div>
+            <div class="large-plot"><span>12 V</span><svg viewBox="0 0 600 180" preserveAspectRatio="none"><path d="M0 145 L42 145 L42 32 L84 32 L84 145 L126 145 L126 32 L168 32 L168 145 L210 145 L210 32 L252 32 L252 145 L294 145 L294 32 L336 32 L336 145 L378 145 L378 32 L420 32 L420 145 L462 145 L462 32 L504 32 L504 145 L546 145 L546 32 L600 32"/></svg></div>
+            <div class="signal-head small"><div><b>T1 · primary current</b><span>−0.140 A</span></div></div>
+            <div class="large-plot orange short"><svg viewBox="0 0 600 100" preserveAspectRatio="none"><path d="M0 80 C45 80 55 22 100 24 S155 82 200 78 S255 22 300 24 S355 82 400 78 S455 22 500 24 S555 80 600 78"/></svg></div>
+          </div>
+          <div class="analysis-pane" data-pane="equations"><h3>Selected component equations</h3><div class="formula"><span>Coupled inductors</span><math><mrow><mi>v</mi><mo>=</mo><mi>L</mi><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mrow></math></div><div class="formula"><span>Stored magnetic energy</span><math><mrow><mi>E</mi><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>L</mi><msup><mi>i</mi><mn>2</mn></msup></mrow></math></div><p>Equations follow the selected component and the current simulation cursor.</p></div>
+          <div class="analysis-pane" data-pane="parameters"><h3>Transformer T1</h3><label>Primary inductance<input value="20 mH"></label><label>Turns ratio<input value="1 : 1 : 1"></label><label>Coupling<input value="1.000"></label></div>
+          <div class="analysis-pane" data-pane="settings"><h3>Simulation settings</h3><label>Time step<input value="Adaptive"></label><label>Duration<input value="40 ms"></label><label>Solver<input value="Backward Euler"></label></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="concept focus" data-concept="focus">
+      <header class="focus-top"><button class="icon-button">☰</button><div><b>Forward converter</b><span>Editable example</span></div><div class="focus-mode"><button class="active">Build</button><button>Run</button><button>Understand</button></div><div class="focus-actions"><button>Share</button><button data-action="new">New circuit</button></div></header>
+      <div class="focus-stage">
+        <img src="assets/circuit-canvas.png" alt="Hydraulic forward converter circuit">
+        <div class="context-toolbar"><button class="active">↖ Select</button><button>⌁ Connect</button><button>＋ Add</button><button>⌗ Arrange</button><i></i><button>↶</button><button>↷</button></div>
+        <div class="context-card"><span class="part-icon"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#coupled-wheels"/></svg></span><div><b data-selected-name>Transformer T1</b><span>20 mH · 1:1:1 · k 1.000</span></div><button>Edit</button></div>
+        <div class="focus-zoom"><button>−</button><button>＋</button><button>Fit</button></div>
+        <div class="focus-run"><button data-action="run">▶</button><span>0.158 ms</span><input type="range" value="34"><button>0.1×</button></div>
+      </div>
+      <section class="bottom-sheet">
+        <button class="sheet-handle" data-action="sheet"><i></i><span>Signals & explanations</span><b>⌃</b></button>
+        <div class="sheet-content">
+          <div class="sheet-plot"><header><div><b>Primary voltage</b><span>11.847 V</span></div><select><option>Last 40 ms</option></select></header><svg viewBox="0 0 600 100" preserveAspectRatio="none"><path d="M0 82 L55 82 L55 20 L110 20 L110 82 L165 82 L165 20 L220 20 L220 82 L275 82 L275 20 L330 20 L330 82 L385 82 L385 20 L440 20 L440 82 L495 82 L495 20 L550 20 L550 82 L600 82"/></svg></div>
+          <div class="sheet-equation"><span>Selected equation</span><math><mrow><mi>v</mi><mo>=</mo><mi>L</mi><mfrac><mrow><mi>d</mi><mi>i</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mrow></math><p>Voltage is proportional to how quickly current changes.</p></div>
+        </div>
+      </section>
+      <aside class="fidelity-card"><button data-action="fidelity"><span>Model fidelity</span><b data-fidelity-label>Ideal</b></button><div><input data-fidelity type="range" min="0" max="2" value="0" step="1"><div><span>Ideal</span><span>Teaching</span><span>Realistic</span></div><p data-fidelity-copy>No leakage, switching loss, or recovery. Best for understanding topology.</p><button data-action="advanced">Advanced settings</button></div></aside>
+    </section>
+
+    <section class="concept compact" data-concept="compact">
+      <header class="compact-head">
+        <div class="compact-title"><span class="compact-logo logo-pair" role="img" aria-label="Inertance"><img class="logo-light" src="assets/inertance-pipe-wordmark.svg" alt=""><img class="logo-dark" src="assets/inertance-pipe-wordmark-reversed.svg" alt=""></span><span>Forward converter</span></div>
+        <label class="compact-select"><span>Topology</span><select><option>Forward converter</option><option>Buck converter</option><option>Boost converter</option><option>Flyback converter</option></select></label>
+        <div class="assumptions" aria-label="Model assumptions"><button class="active" data-model="ideal">Ideal</button><button data-model="ripple">Ripple</button><button data-model="leakage">Leakage</button></div>
+        <details class="compact-menu file-menu"><summary>File</summary><div class="top-menu-body"><button data-action="new">New circuit</button><button>Open circuit</button><button>Save circuit</button><button>Save layout</button></div></details>
+        <button class="small-button active" data-action="builder-toggle" aria-pressed="true">Builder</button>
+        <details class="compact-menu playback-menu"><summary>Playback</summary><div class="top-menu-body settings-menu"><label>Start<select><option>Zero energy</option><option>Periodic steady state</option></select></label><label>Loop<select><option>Continuous</option><option>One cycle</option></select></label><label>Duration<input value="40 ms"></label></div></details>
+        <details class="compact-menu advanced-menu"><summary>Advanced</summary><div class="top-menu-body settings-menu"><label>Time step<select><option>Adaptive</option></select></label><label>Pressure mapping<select><option>Supply-relative</option></select></label><label>Visual travel<input value="1.8×"></label></div></details>
+        <button class="small-button">Auto-arrange</button><button class="small-button">Undo <kbd>⌘Z</kbd></button><button class="small-button">Redo <kbd>⇧⌘Z</kbd></button>
+        <button class="theme-button" data-action="theme">Dark mode</button>
+      </header>
+      <div class="compact-workspace">
+        <aside class="compact-panels">
+          <details open>
+            <summary>Builder <span>12 components</span></summary>
+            <div class="panel-body"><label class="mini-search">Find component<input placeholder="Type to filter"></label><div class="compact-components"><button data-component="Supply"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#pump"/></svg>Supply</button><button data-component="Resistor"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#restriction"/></svg>Resistor</button><button data-component="Capacitor"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#accumulator"/></svg>Capacitor</button><button data-component="Inductor"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#flywheel"/></svg>Inductor</button><button data-component="Diode"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#check-valve"/></svg>Diode</button><button data-component="Switch"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#shutoff-valve"/></svg>Switch</button><button data-component="Transformer"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#coupled-wheels"/></svg>Transformer</button><button data-component="Meter"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols-detailed.svg?v=2#gauge"/></svg>Meter</button></div><div class="compact-tool-row"><button class="active">Select</button><button>Connect</button><button>Junction</button></div></div>
+          </details>
+        </aside>
+        <div class="panel-resizer" role="separator" aria-label="Resize builder panel" aria-orientation="vertical" tabindex="0"></div>
+        <section class="compact-main">
+          <div class="compact-canvas">
+            <div class="canvas-tools"><button class="active">Select</button><button>Connect</button><span></span><button>Zoom out</button><b>88%</b><button>Zoom in</button><button>Fit</button></div>
+            <img src="assets/circuit-canvas.png" alt="Hydraulic forward converter circuit">
+            <div class="compact-inspect"><div><b data-selected-name>Transformer T1</b><span>20 mH · 1:1:1 · k = 1.000</span></div><button>Properties</button></div>
+          </div>
+          <div class="compact-transport"><button class="compact-play" data-action="run">Play</button><span>0.158 ms</span><input class="short-timeline" type="range" min="0" max="100" value="34"><span>40.000 ms</span><label>Speed <select><option>0.1×</option><option>0.5×</option><option>1×</option></select></label><label>Loop <select><option>Continuous</option><option>One cycle</option></select></label><button>Reset</button></div>
+          <section class="waveform-panel">
+            <header><div><b>Waveforms</b><span>Voltage and current share the simulation cursor</span></div><details class="signal-picker"><summary>Signals · 3 shown</summary><div class="signal-menu"><div class="signal-menu-head"><b>Component</b><b>V</b><b>I</b></div><label><span>Supply V1</span><input type="checkbox"><input type="checkbox"></label><label><span>Switch Q1</span><input type="checkbox"><input type="checkbox"></label><label><span>Transformer T1 · W1</span><input type="checkbox" checked><input type="checkbox" checked></label><label><span>Transformer T1 · W2</span><input type="checkbox"><input type="checkbox"></label><label><span>Transformer T1 · W3</span><input type="checkbox"><input type="checkbox"></label><label><span>Reset diode</span><input type="checkbox"><input type="checkbox"></label><label><span>Freewheel diode</span><input type="checkbox"><input type="checkbox"></label><label><span>Output inductor</span><input type="checkbox"><input type="checkbox" checked></label><label><span>Output capacitor</span><input type="checkbox"><input type="checkbox"></label><label><span>Load</span><input type="checkbox"><input type="checkbox"></label></div></details></header>
+            <div class="level-strip"><span><i class="trace-v"></i> T1 W1 · V</span><code>V̄ = 0 V</code><code>Vpk = 12.0 V</code><code>Vmin = −12.0 V</code><code>Vrms = 8.49 V</code><span class="equation">v = L · di/dt</span></div>
+            <div class="compact-plots">
+              <div class="compact-plot"><span>Voltage · V</span><svg viewBox="0 0 900 70" preserveAspectRatio="none"><path class="gridline" d="M0 35H900"/><path class="voltage-line" d="M0 58 L74 58 L74 12 L148 12 L148 58 L222 58 L222 12 L296 12 L296 58 L370 58 L370 12 L444 12 L444 58 L518 58 L518 12 L592 12 L592 58 L666 58 L666 12 L740 12 L740 58 L814 58 L814 12 L900 12"/></svg></div>
+              <div class="compact-plot"><span>Current · A</span><svg viewBox="0 0 900 70" preserveAspectRatio="none"><path class="gridline" d="M0 35H900"/><path class="current-line" d="M0 52 C55 52 75 18 130 18 S205 52 260 52 S335 18 390 18 S465 52 520 52 S595 18 650 18 S725 52 780 52 S850 18 900 18"/><path class="secondary-line" d="M0 43 L900 31"/></svg></div>
+            </div>
+          </section>
+        </section>
+      </div>
+    </section>
+  </main>
+  <nav class="mobile-dock" aria-label="Phone workspace modes">
+    <button class="active"><b>⌁</b><span>Canvas</span></button><button><b>＋</b><span>Build</span></button><button><b>▤</b><span>Inspect</span></button><button><b>▶</b><span>Run</span></button><button><b>⌇</b><span>Signals</span></button>
+  </nav>
+
+  <dialog id="new-dialog">
+    <form method="dialog">
+      <header><div><span class="eyebrow">New circuit</span><h2>How do you want to begin?</h2></div><button value="cancel" aria-label="Close">×</button></header>
+      <div class="start-options"><button value="blank"><i>＋</i><b>Blank canvas</b><span>Build from individual components</span></button><button value="preset"><i>⌁</i><b>Start from an example</b><span>Edit a known-good circuit</span></button><button value="import"><i>⇧</i><b>Import JSON</b><span>Continue an existing design</span></button></div>
+      <footer><span>Your current circuit is already saved in this prototype.</span></footer>
+    </form>
+  </dialog>
+
+  <dialog id="notes-dialog">
+    <form method="dialog"><header><div><span class="eyebrow">Decision guide</span><h2>What each layout is testing</h2></div><button value="cancel">×</button></header><div class="comparison"><p><b>1 · Workbench</b><span>Most discoverable for building; familiar three-panel editor.</span></p><p><b>2 · Canvas studio</b><span>Maximum circuit space; tools appear only when needed.</span></p><p><b>3 · Guided lab</b><span>Best for teaching and first-time users; less efficient for experts.</span></p><p><b>4 · Analysis split</b><span>Strongest for comparing the physical model, plots, and equations.</span></p><p><b>5 · Focus layers</b><span>Cleanest default view; complexity opens in progressive layers.</span></p></div><footer><button value="ok" class="primary">Keep exploring</button></footer></form>
+  </dialog>
+  <script src="app.js"></script>
+</body>
+</html>

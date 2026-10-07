@@ -29,14 +29,17 @@ CWAS = SITE.parent / "cwas"
 SIM = CWAS / "simulator"
 
 SIM_CHECKS = [
+    "check-editor-import.cjs",
     "check-editor-model.cjs",
     "check-editor-modes.cjs",
+    "check-editor-settling.cjs",
     "check-editor-general-ideal.cjs",
     "check-editor-fullboost-ideal.cjs",
     "check-editor-coupled.cjs",
     "check-editor-rc.cjs",
     "check-editor-rlc.cjs",
     "check-editor-layout.cjs",   # also rewrites simulator/editor-layout-report.json
+    "check-editor-example-layouts.cjs",
     "check-lab-model.cjs",       # older fixed-topology lab behind lab/
 ]
 # Browser checks in cwas; they save review screenshots into cwas/simulator/.
@@ -61,7 +64,7 @@ def run(cmd, cwd, label=None):
         print("\n".join("        " + l for l in lines[-25:]))
         sys.exit(f"\nStopped: {name} failed. Fix it (or see WEBSITE-WORKFLOW.md → Troubleshooting) and rerun.")
     last = lines[-1] if lines else ""
-    print(f"  ok    {name}  ({time.time() - start:.0f}s)  {last[:110]}")
+    print(f"  ok    {name}  ({time.time() - start:.0f}s)  {last[:110]}", flush=True)
     return result.stdout
 
 
@@ -105,10 +108,10 @@ def main():
 
     step("3 simulator checks")
     for check in SIM_CHECKS:
-        run(["node", check], SIM, check)
+        run(["node", *(["--expose-gc"] if check in {"check-editor-modes.cjs", "check-editor-settling.cjs"} else []), check], SIM, check)
     if args.full:
         for check in SIM_BROWSER_CHECKS:
-            run(["node", check], SIM, check)
+            run(["node", *(["--expose-gc"] if check in {"check-editor-modes.cjs", "check-editor-settling.cjs"} else []), check], SIM, check)
 
     step("4 site build")
     run([sys.executable, "build_app.py"], SITE, "build_app.py")
@@ -121,9 +124,12 @@ def main():
     else:
         run(["node", "tools/check-app.cjs"], SITE, "tools/check-app.cjs")
         run(["node", "tools/check-modes.cjs"], SITE, "tools/check-modes.cjs")
+        run(["node", "tools/check-analytics.cjs"], SITE, "tools/check-analytics.cjs (intercepted collector; no public events)")
+        run(["node", str(SIM / "check-editor-import-browser.cjs")], SITE, "check-editor-import-browser.cjs (both shells)")
+        run(["node", str(SIM / "check-editor-example-layouts-browser.cjs")], SITE, "check-editor-example-layouts-browser.cjs (both shells)")
 
     step("6 summary")
-    changed = git(SITE, "status", "--porcelain", "--", "app", "lab")
+    changed = git(SITE, "status", "--porcelain", "--", "app", "lab", "assets/analytics")
     print("  site output changes:" if changed else "  site output: no changes versus the last site commit")
     if changed:
         print("\n".join("    " + l for l in changed.splitlines()[:20]))
@@ -132,7 +138,7 @@ def main():
     1. Look at it: python3 -m http.server 4180 --directory .  → http://localhost:4180/app/
     2. Commit the simulator change in cwas (private).
     3. Rerun with --release so the site is stamped with that commit.
-    4. Commit app-src/ + app/ (+ lab/) in inertance-site. Pushing publishes the site.""")
+    4. Commit app-src/ + app/ + assets/analytics/ + about/ (+ lab/) in inertance-site. Pushing publishes the site.""")
     if dirty and not args.release:
         print("\n  Note: this build contains uncommitted simulator changes; fine for local review, not for publishing.")
 

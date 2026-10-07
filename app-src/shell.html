@@ -18,7 +18,7 @@
       <summary>File</summary>
       <div class="menu-body">
         <button id="ed-new" type="button">New blank circuit</button>
-        <button id="ed-load" type="button">Open JSON…</button>
+        <button id="ed-external-open" type="button">Import KiCad / LTspice · Experimental…</button><button id="ed-load" type="button">Open JSON…</button>
         <button id="ed-save" type="button">Save JSON…</button>
         <hr>
         <span class="menu-label">Examples</span>
@@ -35,7 +35,7 @@
     <details class="menu" data-menu>
       <summary>Playback</summary>
       <div class="menu-body settings">
-        <p class="menu-note">Choose Startup or Settled cycles in the model strip. Settled view is shown only after successive cycles converge. Reduced Ideal is periodic without startup; general Ideal component dynamics retain startup.</p>
+        <p class="menu-note">Ripple shows verified steady-state cycles. Enable Transients under Transients / Leakage for startup from zero energy. Reduced Ideal is periodic without startup; general Ideal component dynamics retain startup.</p>
         <label>Loop <select data-host="loop-menu"><option value="1">Continuous</option><option value="0">One run</option></select></label>
       </div>
     </details>
@@ -43,6 +43,8 @@
     <details class="menu" data-menu>
       <summary>View</summary>
       <div class="menu-body settings wide">
+        <button id="ed-default-view" type="button">Reset to default example view</button>
+        <p class="menu-note">Restore example positions and pipe bends. Keeps your electrical values and simulation settings. Undo restores the previous layout.</p>
         <b>Panels</b>
         <label>Builder <input type="checkbox" data-panel="builder" checked></label>
         <label>Simulation setup <input type="checkbox" data-panel="setup"></label>
@@ -61,8 +63,9 @@
         <p>Pick a part in the Builder, then click the canvas to place it (R rotates, Esc cancels). Choose Connect, click to start a pipe and click again to finish. Circles along pipes create branches; nearby terminals snap. Red rings mark loose ends. Drag empty space to pan. Drag a part to move it with its pipes; Shift-drag detaches it. Drop a loose two-terminal part onto a highlighted pipe to insert it in series. Crossings do not connect.</p>
         <p>Click a switch body to toggle it. A diode is a swing check valve that only opens with forward flow. Click a part or pipe to probe its voltage and current.</p>
         <b>What the simulation assumes</b>
-        <p>Startup from zero stored energy. Educational switched RLC solver (backward Euler), not SPICE: DC and sine supplies, resistors, capacitors, inductors, 2–4 coupled windings (k = 1 by default), PWM switches and up to eight diodes (forward drop + 0.01 Ω, no reverse current or recovery). Wires are ideal. Leakage mode includes an inspectable primary RC snubber for recognized flyback and forward circuits. Saturation and reverse recovery are not modeled. Floating nodes and interrupted inductor current are reported rather than hidden.</p>
-        <p><a href="../about/">About Inertance, contact &amp; privacy</a> · <a href="https://github.com/Lucasfrit/inertance-site/issues">Report a problem</a></p>
+        <p>Ripple defaults to verified steady state; advanced Transients starts from zero stored energy. Educational switched RLC solver (backward Euler), not SPICE: DC and sine supplies, resistors, capacitors, inductors, 2–4 coupled windings (k = 1 by default), PWM switches and up to eight diodes (forward drop + 0.01 Ω, no reverse current or recovery). Wires are ideal. Leakage mode includes an inspectable primary RC snubber for recognized flyback and forward circuits. Saturation and reverse recovery are not modeled. Floating nodes and interrupted inductor current are reported rather than hidden.</p>
+      <p><a href="../about/">About Inertance, contact &amp; privacy</a> · <a href="https://github.com/Lucasfrit/inertance-site/issues">Report a problem</a></p>
+      <p><button type="button" data-analytics-settings>Analytics settings</button></p>
         <p class="menu-note build-stamp" data-host="build"></p>
       </div>
     </details>
@@ -95,23 +98,17 @@
       <fieldset class="setup-group"><legend>Model fidelity</legend><div class="fidelity-options">
       <button id="ed-model-ideal" type="button" aria-pressed="false">Ideal</button>
       <button id="ed-model-ripple" type="button" aria-pressed="true">Ripple</button>
-      <button id="ed-model-leakage" type="button" aria-pressed="false">Leakage · experimental</button>
       </div></fieldset>
       <fieldset class="setup-group"><legend>Simulation</legend>
       <label>Device losses <select id="ed-model-losses"><option value="ideal">Ideal conduction</option><option value="configured">Configured losses</option></select></label>
-      <label>Simulation window <select id="ed-model-view"><option value="startup">Startup</option><option value="settled">Settled cycles</option></select></label>
       <label class="setup-overlay"><input id="ed-model-overlay" type="checkbox"> Course reference overlay</label>
 
       </fieldset>
-      <details class="setup-visual" open><summary>Simulation appearance</summary><div class="setup-group">        <label>Pressure view <select id="ed-magnetic-mode"><option value="local">Winding-only gradient</option><option value="split">Two pressure regions</option><option value="circuit" selected>Circuit pressure</option></select></label>
-        <label>Color scale <select id="ed-pressure-scale"><option value="log">Soft logarithmic</option><option value="root">Square-root style</option><option value="linear">Linear</option></select></label>
-        <label>Contrast <span class="inline"><input id="ed-pressure-gain" type="range" min="0.5" max="4" step="0.1" value="2.5" aria-label="Pressure color contrast"><output id="ed-pressure-gain-label">2.5×</output></span></label>
-        <label>Color reference <select id="ed-reference"><option value="supply">Supply +</option><option value="return">Bottom return</option><option value="midpoint">Supply midpoint</option></select></label>
-        <label>Visual travel <input id="ed-travel" type="number" min=".25" max="3" step=".05" value="1.8"></label>
-        <output id="ed-pressure-range" class="menu-note"></output>
-        <p class="menu-note">Darker blue = higher relative pressure. Nonlinear scales exaggerate small differences; equal pressure keeps the same color.</p></div></details>
-      <details class="model-details"><summary>Model &amp; protection</summary>
-        <p>Ripple is the default. Ideal uses a periodic ripple-neglected course reduction where validated. Other circuits use ideal components with finite L/C dynamics, preserving charging and oscillations; the model note identifies this fallback. Ideal always uses ideal conduction. Ripple retains finite L/C and startup. Leakage is incomplete and experimental: only recognized flyback and forward circuits currently support its primary RC snubber. Every active mode drives water pressure, particles, stored charge, meters and plots.</p>
+      <details class="model-details"><summary>Transients / Leakage · advanced</summary>
+        <p>Ripple shows four verified steady-state cycles with finite L/C ripple. Settling extends the solve within a fixed budget; failure is reported. Ideal keeps the existing course reductions or ideal-component dynamics.</p>
+        <label class="model-transients"><input id="ed-model-view" type="checkbox"> Transients · startup from zero energy</label>
+        <button id="ed-model-leakage" type="button" aria-pressed="false">Leakage · finite coupling + RC</button>
+        <p>Transients includes startup and switch-cycle ripple. Leakage independently adds finite magnetic coupling and an inspectable primary RC snubber, validated only for recognized flyback and reset-forward. Unavailable circuits keep this control disabled.</p>
         <label>Leakage coupling k <input id="ed-model-coupling" type="number" min=".001" max="1" step=".001" value=".98"></label>
         <label>Snubber C (µF) <input id="ed-model-cap" type="number" min=".001" max="1000" step="any" value="5"></label>
         <label>Snubber R (Ω) <input id="ed-model-resistance" type="number" min=".001" max="100000" step="any" value="8"></label>
@@ -121,6 +118,13 @@
         <details><summary>Inspect effective circuit JSON</summary><pre id="ed-model-json"></pre></details>
         <p>Ideal devices means zero diode drop/on resistance and zero switch on resistance. The source feed and snubber resistor remain explicit losses. Configured losses retains editable conduction parameters, including 0.01 Ω diode resistance by default. No recovery, avalanche, saturation or nonlinear Coss model.</p>
       </details>
+      <details class="setup-visual" open><summary>Simulation appearance</summary><div class="setup-group">        <label>Pressure view <select id="ed-magnetic-mode"><option value="local">Winding-only gradient</option><option value="split">Two pressure regions</option><option value="circuit" selected>Circuit pressure</option></select></label>
+        <label>Color scale <select id="ed-pressure-scale"><option value="log">Soft logarithmic</option><option value="root">Square-root style</option><option value="linear">Linear</option></select></label>
+        <label>Contrast <span class="inline"><input id="ed-pressure-gain" type="range" min="0.5" max="4" step="0.1" value="2.5" aria-label="Pressure color contrast"><output id="ed-pressure-gain-label">2.5×</output></span></label>
+        <label>Color reference <select id="ed-reference"><option value="supply">Supply +</option><option value="return">Bottom return</option><option value="midpoint">Supply midpoint</option></select></label>
+        <label>Visual travel <input id="ed-travel" type="number" min=".25" max="3" step=".05" value="1.8"></label>
+        <output id="ed-pressure-range" class="menu-note"></output>
+        <p class="menu-note">Darker blue = higher relative pressure. Nonlinear scales exaggerate small differences; equal pressure keeps the same color.</p></div></details>
     </div>
     <p id="ed-model-note" role="status" aria-live="polite"></p>
   </aside>
@@ -192,7 +196,7 @@
         <span class="duration" data-host="duration"></span>
         <label>Speed <select data-host="speed"><option value="25">0.01×</option><option value="36.93">0.03×</option><option value="50" selected>0.1×</option><option value="61.93">0.3×</option><option value="75">1×</option><option value="86.93">3×</option><option value="100">10×</option></select></label>
         <label class="loop">Loop <select data-host="loop"><option value="1">Continuous</option><option value="0">One run</option></select></label>
-        <button id="ed-reset" type="button">Reset</button>
+        <button id="ed-reset" type="button">Reset time</button>
         <span class="sr"><input id="ed-speed" type="range" min="0" max="100" value="50" step="any" tabindex="-1" aria-hidden="true"><output id="ed-speed-label">0.1×</output></span>
       </div>
 
@@ -237,4 +241,21 @@
 
   <div id="ed-tip" class="tip" hidden role="tooltip"></div>
   <div id="ed-announce" class="sr" aria-live="polite"></div>
+<dialog id="ed-external-dialog" class="external-import" aria-labelledby="ed-external-title">
+  <h2 id="ed-external-title">Experimental circuit import</h2>
+  <p>Preview an RLC circuit with constant voltage supplies before replacing the current circuit.</p>
+  <details><summary>Supported formats and export instructions</summary>
+  <p>LTspice: View → SPICE Netlist; save UTF-8 .cir/.net/.sp or paste text. Supports R, L, C, constant V and one uniform K group per 2–4 windings.</p>
+  <p>KiCad: File → Export → Netlist → KiCad (.net), or <code>kicad-cli sch export netlist --format kicadsexpr</code>. Supports standard Device R/R_Small, C/C_Small/C_Polarized/CP/CP1, L/L_Small and Battery/Battery_Cell, pins 1 and 2. Use a literal voltage for the battery and one net named GND, 0, /GND or /0.</p>
+  <p>Direct .kicad_sch, .asc, XML, semiconductors, models, expressions, controlled/time-varying sources and initial conditions are unsupported. No device is silently skipped or substituted.</p>
+  </details>
+  <label for="ed-external-format">Format</label>
+  <select id="ed-external-format"><option value="auto">Detect from content</option><option value="spice">LTspice / SPICE subset</option><option value="kicad">KiCad native exported netlist</option></select>
+  <label for="ed-external-text">Netlist text (UTF-8, up to 1 MB; 24 electrical parts)</label>
+  <textarea id="ed-external-text" rows="8" spellcheck="false" placeholder="* RC example&#10;V1 in 0 DC 12&#10;R1 in out 1k&#10;C1 out 0 10u&#10;.tran 0 50m&#10;.end"></textarea>
+  <input id="ed-external-file" type="file" accept=".cir,.net,.sp,.txt,text/plain" hidden>
+  <div class="row"><button id="ed-external-browse" type="button">Choose local file…</button><button id="ed-external-preview" type="button">Preview import</button><button id="ed-external-apply" type="button" disabled>Apply reviewed import</button><button id="ed-external-close" type="button">Close</button></div>
+  <pre id="ed-external-report" role="status" aria-live="polite"></pre>
+  <p>Experimental educational simulation: ideal linear parts and wires, zero stored energy at startup, backward Euler. This is not full SPICE compatibility or trace replay. General Ideal retains network dynamics; automatic Leakage protection is unavailable.</p>
+</dialog>
 </div>

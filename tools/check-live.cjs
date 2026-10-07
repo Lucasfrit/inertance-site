@@ -14,6 +14,9 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
   const browser = await chromium.launch({ channel: 'chrome', headless: true, args });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    // Production checks must never generate analytics or obscure controls with
+    // the optional consent panel. The privacy preference keeps collection off.
+    await page.addInitScript(() => Object.defineProperty(navigator, 'doNotTrack', { get: () => '1' }));
     const errors = [];
     const scriptHosts = new Set();
     page.on('request', r => { if (r.resourceType() === 'script') scriptHosts.add(new URL(r.url()).origin); });

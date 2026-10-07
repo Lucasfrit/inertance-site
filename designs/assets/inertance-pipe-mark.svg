@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Inertance logo mark</title>
+  <desc id="desc">A water-filled pipe bent into the shape of an electrical inductor.</desc>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28 166h26c0-58 37-58 37 0s37 58 37 0 37-58 37 0 37 58 37 0h26" stroke="#183044" stroke-width="28"/>
+    <path d="M28 166h26c0-58 37-58 37 0s37 58 37 0 37-58 37 0 37 58 37 0h26" stroke="#2F9DE4" stroke-width="16"/>
+  </g>
+</svg>
