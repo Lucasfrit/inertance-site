@@ -85,18 +85,17 @@ This repo is public and contains the generated client apps and their website she
 and build tools. Private development notes, research and roadmap stay in cwas.
 Simulator JavaScript is intentionally inlined in the public apps.
 
-## Licence
+## Licence and source
 
-The simulator code served from `app/index.html` and `lab/index.html` is licensed **AGPL-3.0-or-later**.
-Copyright © 2026 Lucas Wybrandt.
+Software: **AGPL-3.0-or-later**, with qualified copyright and scope in
+[SOFTWARE-NOTICE.md](SOFTWARE-NOTICE.md), full [LICENSE](LICENSE),
+[third-party notices](THIRD-PARTY-NOTICES.md) and a bounded
+[content manifest](CONTENT-LICENSE.md). Commercial reuse is permitted under the
+applicable licence; covered modifications have corresponding-source conditions.
+No obligation to submit improvements to Lucas is added.
 
-Note that the demo is client-side JavaScript, so the code is readable via View Source by
-design — the licence is what governs reuse, not obscurity. AGPL was chosen over MIT
-specifically because it requires anyone who hosts a modified copy to publish their
-changes.
-
-Copyright is retained solely by the author, which leaves the option of granting a
-commercial exception later.
-
-The unmodified d3 7.9.0 library is distributed under its upstream ISC license;
-see `assets/vendor/d3.LICENSE.txt` and `assets/vendor/README.md`.
+[Download matching preferred sources and build instructions](https://inertance.org/source/)
+for the current release and 7 October baseline. Packages contain the actual
+simulator modules, website inputs and necessary lab/gallery/build dependencies,
+without private history or research. See the [public changelog](https://inertance.org/changelog/)
+and [contribution terms](CONTRIBUTING.md). The mirror offers the same downloads.

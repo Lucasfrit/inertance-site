@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {
+      "id": "V1",
+      "type": "source",
+      "x": 100,
+      "y": 270,
+      "value": 12,
+      "rotation": 0
+    },
+    {
+      "id": "Q1",
+      "type": "switch",
+      "x": 260,
+      "y": 100,
+      "value": 10,
+      "rotation": 270
+    },
+    {
+      "id": "L1",
+      "type": "inductor",
+      "x": 480,
+      "y": 200,
+      "value": 47,
+      "rotation": 0
+    },
+    {
+      "id": "R1",
+      "type": "resistor",
+      "x": 700,
+      "y": 280,
+      "value": 10,
+      "rotation": 90
+    },
+    {
+      "id": "D1",
+      "type": "diode",
+      "x": 380,
+      "y": 290,
+      "value": 0.7,
+      "rotation": 180
+    },
+    {
+      "id": "J1",
+      "type": "junction",
+      "x": 380,
+      "y": 100,
+      "value": 0,
+      "rotation": 0
+    },
+    {
+      "id": "J0",
+      "type": "junction",
+      "x": 380,
+      "y": 460,
+      "value": 0,
+      "rotation": 0
+    }
+  ],
+  "wires": [
+    {
+      "id": "W1",
+      "from": {
+        "component": "V1",
+        "port": "p"
+      },
+      "to": {
+        "component": "Q1",
+        "port": "a"
+      }
+    },
+    {
+      "id": "W2",
+      "from": {
+        "component": "Q1",
+        "port": "b"
+      },
+      "to": {
+        "component": "J1",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W3",
+      "from": {
+        "component": "J1",
+        "port": "j"
+      },
+      "to": {
+        "component": "L1",
+        "port": "a"
+      }
+    },
+    {
+      "id": "W4",
+      "from": {
+        "component": "L1",
+        "port": "b"
+      },
+      "to": {
+        "component": "R1",
+        "port": "a"
+      }
+    },
+    {
+      "id": "W5",
+      "from": {
+        "component": "R1",
+        "port": "b"
+      },
+      "to": {
+        "component": "J0",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W6",
+      "from": {
+        "component": "J0",
+        "port": "j"
+      },
+      "to": {
+        "component": "V1",
+        "port": "n"
+      }
+    },
+    {
+      "id": "W7",
+      "from": {
+        "component": "J0",
+        "port": "j"
+      },
+      "to": {
+        "component": "D1",
+        "port": "a"
+      }
+    },
+    {
+      "id": "W8",
+      "from": {
+        "component": "D1",
+        "port": "b"
+      },
+      "to": {
+        "component": "J1",
+        "port": "j"
+      }
+    }
+  ],
+  "settings": {
+    "loadOn": 0.002,
+    "tail": 0.02,
+    "travel": 1.8,
+    "colorReference": "supply",
+    "model": {
+      "view": "startup"
+    }
+  }
+}

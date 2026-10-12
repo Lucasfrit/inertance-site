@@ -1,7 +1,6 @@
 /* Inertance app — compact hybrid shell.
-   Tokens follow designs/ (Compact hybrid concept). The hydraulic drawing itself stays
-   black-on-paper in both themes: its colors carry physical meaning (darker blue =
-   higher pressure) and are not re-themed here. */
+   Tokens follow designs/ (Compact hybrid concept). The canvas follows the theme;
+   hydraulic pressure colors retain their physical meaning (darker blue = higher pressure). */
 
 :root{
   color-scheme:light;
@@ -13,7 +12,7 @@
 :root[data-theme=dark]{
   color-scheme:dark;
   --c-bg:#101214; --c-panel:#191c1f; --c-soft:#22262a; --c-ink:#edf0f1; --c-muted:#9aa2a7;
-  --c-line:#383d41; --c-accent:#56b9f3; --c-voltage:#56b9f3; --c-current:#f6f9fc; --c-paper:#f4f5f3;
+  --c-line:#383d41; --c-accent:#56b9f3; --c-voltage:#56b9f3; --c-current:#f6f9fc; --c-paper:#141a1f;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--c-bg);color:var(--c-ink)}
@@ -99,9 +98,12 @@ body{overflow:hidden}
 /* ---- canvas ---- */
 .canvas-area{position:relative;min-height:0;background:var(--c-paper);overflow:hidden}
 .stage{position:absolute;inset:44px 0 20px 0;overflow:hidden}
-#circuit-editor #ed-canvas{display:block;width:100%;height:100%!important;background:var(--c-paper);touch-action:none;color:black;outline:0}
-#circuit-editor #ed-canvas text{font-family:system-ui,sans-serif;fill:black;pointer-events:none}
-.canvas-tools{position:absolute;z-index:3;top:8px;left:8px;display:flex;align-items:center;gap:3px;padding:3px;background:color-mix(in srgb,var(--c-panel) 94%,transparent);border:1px solid var(--c-line);border-radius:6px;box-shadow:0 5px 14px #0000000d}
+#circuit-editor #ed-canvas{display:block;width:100%;height:100%!important;background:var(--c-paper);touch-action:none;color:var(--c-ink);outline:0}
+#circuit-editor #ed-canvas text{font-family:system-ui,sans-serif;fill:var(--c-ink);pointer-events:none}
+.canvas-tools{position:absolute;z-index:3;top:8px;left:8px;display:flex;flex-wrap:wrap;max-width:calc(100% - 16px);align-items:center;gap:3px;padding:3px;background:color-mix(in srgb,var(--c-panel) 94%,transparent);border:1px solid var(--c-line);border-radius:6px;box-shadow:0 5px 14px #0000000d}
+.schematic-identity{display:flex;align-items:center;gap:8px;flex-basis:100%;min-width:0;border-bottom:1px solid var(--c-line);padding-bottom:3px}
+.schematic-identity #ed-schematic-name{font-weight:600;max-width:230px;overflow:hidden;text-overflow:ellipsis;text-align:left}
+#ed-autosave-status{font-size:11px;color:var(--c-muted);white-space:nowrap}
 .canvas-tools button{border-color:transparent}
 .canvas-tools .sep{height:18px;border-left:1px solid var(--c-line);margin:0 2px}
 .canvas-tools b{font-size:11px;padding:0 4px;min-width:42px;text-align:center;font-variant-numeric:tabular-nums}
@@ -109,21 +111,21 @@ body{overflow:hidden}
 .inspect-card div{display:flex;flex-direction:column;min-width:0}
 .inspect-card b,.inspect-card span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .inspect-card span{font-size:10px;color:var(--c-muted)}
-.status-line{position:absolute;z-index:2;left:8px;bottom:6px;right:8px;pointer-events:none;font-size:11px;color:#40464b;text-shadow:0 0 3px #fff,0 0 3px #fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status-line{position:absolute;z-index:2;left:8px;bottom:6px;right:8px;pointer-events:none;font-size:11px;color:var(--c-muted);text-shadow:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .transfer{position:absolute;z-index:6;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100% - 24px));display:grid;gap:8px;padding:12px;background:var(--c-panel);color:var(--c-ink);border:1px solid var(--c-line);border-radius:8px;box-shadow:0 20px 50px #0004}
 .transfer label{font-weight:600}
 .transfer textarea{width:100%;font:11px/1.45 ui-monospace,monospace;resize:vertical}
 .row{display:flex;flex-wrap:wrap;gap:5px}
 
 /* ---- transport ---- */
-.transport{display:flex;align-items:center;gap:8px;min-height:38px;padding:4px 8px;background:var(--c-soft);border-top:1px solid var(--c-line);border-bottom:1px solid var(--c-line);font-size:11px;overflow-x:auto;white-space:nowrap}
-.transport .play{min-width:62px;background:var(--c-ink);color:var(--c-panel);border-color:var(--c-ink)}
-.transport .play:hover:not(:disabled){background:var(--c-ink);opacity:.88}
-.transport .time{flex:none;font-variant-numeric:tabular-nums;min-width:15ch;color:var(--c-ink)}
-.transport #ed-scrub{flex:0 1 260px;width:25vw;min-width:110px;max-width:260px;min-height:0;padding:0;border:0;background:transparent;accent-color:var(--c-accent)}
-.transport .duration{color:var(--c-muted);font-variant-numeric:tabular-nums}
-.transport label{display:flex;align-items:center;gap:4px;color:var(--c-muted)}
-.transport select{min-height:26px;padding-block:2px}
+.simulation-controls{display:flex;align-items:center;gap:8px;min-height:38px;padding:4px 8px;background:var(--c-soft);border-top:1px solid var(--c-line);border-bottom:1px solid var(--c-line);font-size:11px;overflow-x:auto;white-space:nowrap}
+.simulation-controls .play{min-width:62px;background:var(--c-ink);color:var(--c-panel);border-color:var(--c-ink)}
+.simulation-controls .play:hover:not(:disabled){background:var(--c-ink);opacity:.88}
+.simulation-controls .time{flex:none;font-variant-numeric:tabular-nums;min-width:15ch;color:var(--c-ink)}
+.simulation-controls #ed-scrub{flex:0 1 260px;width:25vw;min-width:110px;max-width:260px;min-height:0;padding:0;border:0;background:transparent;accent-color:var(--c-accent)}
+.simulation-controls .duration{color:var(--c-muted);font-variant-numeric:tabular-nums}
+.simulation-controls label{display:flex;align-items:center;gap:4px;color:var(--c-muted)}
+.simulation-controls select{min-height:26px;padding-block:2px}
 
 /* ---- waveforms ---- */
 .waveforms{min-width:0;background:var(--c-panel);padding:4px 9px 6px}
@@ -236,9 +238,9 @@ body{overflow:hidden}
   .inspect-card{top:auto;bottom:22px;left:8px;right:8px;max-width:none}
   .inspect-card button{margin-left:auto}
   .canvas-tools{right:8px;overflow-x:auto}
-  .transport{position:static}
-  .transport .loop,.transport .duration{display:none}
-  .transport .time{min-width:0}
+  .simulation-controls{position:static}
+  .simulation-controls .loop,.simulation-controls .duration{display:none}
+  .simulation-controls .time{min-width:0}
   .plots{grid-template-columns:1fr}
   .wave-body{max-height:none;overflow:visible}
   .plot-controls{justify-content:flex-start;width:100%}
@@ -403,3 +405,85 @@ body.page-scroll{overflow:auto}
 #circuit-editor .setup-panel .model-transients{justify-content:flex-start;flex-wrap:nowrap;align-items:flex-start;line-height:1.4}
 #circuit-editor .model-transients input{flex:none;margin-top:2px}
 #circuit-editor .model-details #ed-model-leakage{width:100%;text-align:left}
+
+/* Compact flat settings; explanations use the browser's top layer. */
+#circuit-editor .model-controls .setup-group{min-width:0;margin:0;border:0;padding:6px 0}
+#circuit-editor .setup-group[hidden]{display:none}
+#circuit-editor .setup-group legend{font-weight:600;font-size:12px}
+#circuit-editor .fidelity-options,#circuit-editor .setting-choices{display:flex;flex-wrap:wrap;gap:4px}
+#circuit-editor .fidelity-options button{flex:1;min-width:65px}
+#circuit-editor .fidelity-options small{display:block;font-size:9px;font-weight:400}
+#circuit-editor .setting-choices button{padding:3px 6px;font-size:11px;min-height:25px}
+#circuit-editor select[data-flat-setting]{display:none}
+#circuit-editor .info-wrap{display:inline-flex;vertical-align:middle}
+#circuit-editor .info-button{display:inline-flex;align-items:center;justify-content:center;flex:none;border:1px solid var(--ed-border);border-radius:50%;position:relative;width:14px;height:14px;min-height:14px;padding:0;font:600 10px Georgia,serif;background:transparent;color:inherit;cursor:pointer}
+#circuit-editor .info-button[aria-expanded=true]{background:var(--ed-text);color:var(--ed-bg)}
+#circuit-editor .info-content{box-sizing:border-box;position:fixed;inset:auto;margin:0;width:min(360px,calc(100vw - 24px));max-height:min(480px,calc(100dvh - 24px));overflow:auto;padding:14px;border:1px solid var(--ed-border);border-radius:8px;background:var(--ed-bg);color:var(--ed-text);font:12px/1.5 system-ui,sans-serif;box-shadow:0 8px 32px #0003}
+#circuit-editor .info-content p{margin:0 0 9px}
+#circuit-editor .info-content p:last-child{margin-bottom:0}
+#circuit-editor .info-content pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px}
+#circuit-editor #ed-model-status{display:block;font-size:11px;margin-top:5px;color:var(--ed-muted)}
+#circuit-editor .model-controls .setup-overlay{flex-direction:row;justify-content:flex-start;align-items:center;gap:5px}
+#circuit-editor .model-controls input[type=number]{max-width:100%;width:90px}
+#circuit-editor .effective-label{display:inline-flex;gap:5px;align-items:center;font-size:11px}
+
+#circuit-editor .fidelity-options{flex-direction:row;align-items:stretch}
+#circuit-editor .setting-choices button[aria-pressed=true]{background:var(--ed-text);color:var(--ed-bg)}
+#circuit-editor .setup-panel .setup-group label.setup-overlay{flex-direction:row;justify-content:flex-start;align-items:center;flex-wrap:nowrap}
+#circuit-editor .setup-panel .setup-group label.solver-steps{display:grid;grid-template-columns:auto 14px 1fr;align-items:center;gap:5px}
+#circuit-editor .solver-steps input{justify-self:end}
+#circuit-editor .info-button::before{content:"";position:absolute;inset:-5px}
+#circuit-editor .setting-row{display:flex;align-items:center;gap:6px}
+#circuit-editor .setting-row .setup-overlay{margin:5px 0}
+
+.builder-actions,.viewing-controls{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.viewing-controls label{display:flex;align-items:center;gap:6px}
+.schematic-name-input{width:min(280px,60vw)}
+@media(max-width:760px){.simulation-controls #ed-scrub{min-width:70px;flex:1}.simulation-controls{gap:5px}.simulation-controls .time{font-size:10px}}
+
+/* Keep viewing rate within reach even while Simulation setup is closed. */
+.simulation-controls{flex-wrap:wrap;overflow:visible}
+.simulation-controls .viewing-controls{display:flex;gap:10px;margin:0;margin-left:auto;flex:none}
+.simulation-controls .viewing-controls label{font-size:11px;color:var(--c-ink)}
+.simulation-controls .viewing-controls select{width:auto;min-width:68px}
+.builder-actions{display:grid;grid-template-columns:1fr;gap:7px}
+.builder-actions button{text-align:left;display:flex;align-items:center;gap:8px;min-height:34px}
+.builder-actions .panel-control{background:var(--c-soft);border:1px solid var(--c-line)}
+.builder-actions .panel-control[aria-expanded=true]{background:var(--c-ink);color:var(--c-panel);border-color:var(--c-ink)}
+.panel-control svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.4}
+.builder-actions .arrange-control{border-color:transparent;background:transparent;color:var(--c-muted)}
+.arrange-control::before{content:'▦';font-size:20px;line-height:1}
+#ed-delete-schematic:not(:disabled){color:var(--c-danger,#b94236)}
+.wave-sidebar>b{font-size:14px;letter-spacing:-.02em}
+.wave-sidebar .level-strip{display:block;padding:0;margin-top:0;font-size:12px}
+.probe-heading{display:flex;flex-direction:column;gap:3px;padding:6px 0}
+.probe-heading strong{font-size:19px;line-height:1.2;overflow-wrap:anywhere}
+.probe-heading>span:last-child{color:var(--c-muted)}
+.eyebrow{text-transform:uppercase;letter-spacing:.07em;font-size:9px;font-weight:700;color:var(--c-muted)}
+.stats-window{font-size:11px;color:var(--c-muted);line-height:1.5;margin:6px 0 12px}
+.signal-summary{border:1px solid var(--c-line);border-radius:9px;padding:11px;margin:8px 0;background:var(--c-soft)}
+.signal-summary header{display:flex;align-items:center;gap:6px;font-size:11px}
+.signal-summary header>span{margin-left:auto;color:var(--c-muted);font-size:10px}
+.signal-summary header i{width:7px;height:7px;border-radius:50%;background:var(--c-voltage,#238acd)}
+.signal-summary.a header i{background:var(--c-current,#ba7352)}
+.signal-summary>strong{display:block;font-size:22px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin:5px 0 10px}
+.signal-range{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;font-variant-numeric:tabular-nums}
+.signal-range span{display:flex;flex-direction:column;gap:3px}
+.signal-range small{font-size:9px;color:var(--c-muted)}
+.memory-summary{padding:11px;border:1px solid var(--c-line);border-radius:9px;margin:8px 0}
+.memory-summary>b{font-size:11px}.memory-summary dl{margin:10px 0}.memory-summary dt{font-size:10px;color:var(--c-muted);margin-top:8px}.memory-summary dd{margin:3px 0;font-variant-numeric:tabular-nums}.memory-summary p{font-size:10px;color:var(--c-muted);margin-bottom:0}
+.advanced-stats,.probe-model,.wave-equation,.wave-sidebar .calcs{border-top:1px solid var(--c-line);margin-top:12px;padding-top:10px}
+.advanced-stats summary,.probe-model summary,.wave-equation summary,.wave-sidebar .calcs summary{font-size:11px;font-weight:600;cursor:pointer}
+.advanced-stats table{width:100%;font-size:10px;border-collapse:collapse;margin-top:10px}.advanced-stats th,.advanced-stats td{text-align:left;padding:5px 3px;border-bottom:1px solid var(--c-line)}
+.advanced-stats p,.probe-model p{font-size:11px;color:var(--c-muted);line-height:1.5}
+.wave-sidebar .equation-card{border:0;padding:10px 0;background:transparent;gap:8px;margin:0}
+.wave-sidebar .equation-card .eq-name{display:none}.wave-sidebar .equation-card .eq-note{font-size:11px;line-height:1.5}
+@media(max-width:760px){.simulation-controls .viewing-controls{margin-left:0}.simulation-controls .viewing-controls .loop{display:flex}.simulation-controls .time{flex:1}.simulation-controls #ed-scrub{max-width:none}.wave-probe{display:block}.signal-summary>strong{font-size:20px}}
+
+/* Dark schematic experiment: change paper and labels, keep pressure colors. */
+#circuit-editor #ed-canvas [data-pipe-halo]{stroke:var(--c-paper)}
+#circuit-editor #ed-canvas [data-routed-junction]>rect{fill:var(--c-paper)}
+#circuit-editor #ed-canvas [data-device-symbol]{fill:#202326}
+#circuit-editor #ed-canvas [data-pwm-marker] line{stroke:var(--c-ink)}
+
+.inspector [data-memristor-close] text{fill:var(--c-ink)}

@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {
+      "id": "V1",
+      "type": "source",
+      "value": 12,
+      "x": 110,
+      "y": 420,
+      "rotation": 0
+    },
+    {
+      "id": "Rin",
+      "type": "resistor",
+      "value": 0.1,
+      "x": 250,
+      "y": 130,
+      "rotation": 0
+    },
+    {
+      "id": "Ci",
+      "type": "capacitor",
+      "value": 150,
+      "x": 350,
+      "y": 420,
+      "rotation": 0
+    },
+    {
+      "id": "Q1",
+      "type": "switch",
+      "value": 1,
+      "x": 520,
+      "y": 130,
+      "rotation": 270,
+      "ron": 0.02,
+      "pwm": {
+        "frequency": 1000,
+        "duty": 0.5,
+        "phase": 0
+      }
+    },
+    {
+      "id": "D1",
+      "type": "diode",
+      "value": 0.3,
+      "x": 670,
+      "y": 440,
+      "rotation": 180
+    },
+    {
+      "id": "L1",
+      "type": "inductor",
+      "value": 4.7,
+      "x": 940,
+      "y": 230,
+      "rotation": 0
+    },
+    {
+      "id": "Co",
+      "type": "capacitor",
+      "value": 100,
+      "x": 1330,
+      "y": 460,
+      "rotation": 0
+    },
+    {
+      "id": "Rload",
+      "type": "resistor",
+      "value": 12,
+      "x": 1570,
+      "y": 460,
+      "rotation": 90
+    },
+    {
+      "id": "J1",
+      "type": "junction",
+      "value": 0,
+      "x": 200,
+      "y": 730,
+      "rotation": 0
+    },
+    {
+      "id": "J2",
+      "type": "junction",
+      "value": 0,
+      "x": 320,
+      "y": 130,
+      "rotation": 0
+    },
+    {
+      "id": "J3",
+      "type": "junction",
+      "value": 0,
+      "x": 670,
+      "y": 130,
+      "rotation": 0
+    },
+    {
+      "id": "J4",
+      "type": "junction",
+      "value": 0,
+      "x": 1330,
+      "y": 210,
+      "rotation": 0
+    }
+  ],
+  "wires": [
+    {
+      "id": "W1",
+      "from": {
+        "component": "V1",
+        "port": "p"
+      },
+      "to": {
+        "component": "Rin",
+        "port": "a"
+      }
+    },
+    {
+      "id": "W2",
+      "from": {
+        "component": "V1",
+        "port": "n"
+      },
+      "to": {
+        "component": "J1",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W3",
+      "from": {
+        "component": "Ci",
+        "port": "n"
+      },
+      "to": {
+        "component": "J1",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W4",
+      "from": {
+        "component": "D1",
+        "port": "a"
+      },
+      "to": {
+        "component": "J1",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W5",
+      "from": {
+        "component": "Co",
+        "port": "n"
+      },
+      "to": {
+        "component": "J1",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W6",
+      "from": {
+        "component": "Rload",
+        "port": "b"
+      },
+      "to": {
+        "component": "J1",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W7",
+      "from": {
+        "component": "Rin",
+        "port": "b"
+      },
+      "to": {
+        "component": "J2",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W8",
+      "from": {
+        "component": "Ci",
+        "port": "p"
+      },
+      "to": {
+        "component": "J2",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W9",
+      "from": {
+        "component": "Q1",
+        "port": "a"
+      },
+      "to": {
+        "component": "J2",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W10",
+      "from": {
+        "component": "Q1",
+        "port": "b"
+      },
+      "to": {
+        "component": "J3",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W11",
+      "from": {
+        "component": "D1",
+        "port": "b"
+      },
+      "to": {
+        "component": "J3",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W12",
+      "from": {
+        "component": "L1",
+        "port": "a"
+      },
+      "to": {
+        "component": "J3",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W13",
+      "from": {
+        "component": "L1",
+        "port": "b"
+      },
+      "to": {
+        "component": "J4",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W14",
+      "from": {
+        "component": "Co",
+        "port": "p"
+      },
+      "to": {
+        "component": "J4",
+        "port": "j"
+      }
+    },
+    {
+      "id": "W15",
+      "from": {
+        "component": "Rload",
+        "port": "a"
+      },
+      "to": {
+        "component": "J4",
+        "port": "j"
+      }
+    }
+  ],
+  "settings": {
+    "loadOn": 0.001,
+    "tail": 0.02,
+    "travel": 1.8,
+    "colorReference": "supply",
+    "duration": 0.04,
+    "model": {
+      "view": "startup"
+    }
+  }
+}

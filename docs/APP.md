@@ -1,6 +1,15 @@
 # Inertance web app — compact hybrid shell
 
-Updated 7 October 2026. `app/` is the working circuit simulator for the
+The 11 October combined local build retains the current shell and all integrated
+memristor, custom Save/Rename/Discard, mode, import, layout and analytics work.
+It remains uncommitted and unpublished. Its integration repairs add the fixed
+memristor preset event, correct an open-switch memory voltage annotation, and
+refresh/extend cross-feature validation. The default pipeline has 18 model/storage
+checks and seven browser suites; --full adds three development-browser checks.
+See sibling `cwas/docs/INTEGRATION-2026-10-11.md` for source provenance, snapshots,
+test/visual evidence, deferred prototypes and the exact release sequence.
+
+Updated 11 October 2026. `app/` is the working circuit simulator for the
 website: the **real** editor and solver from the private `cwas` repo, running
 inside the *Compact hybrid* layout (concept 6 in `designs/`). It is not a mockup:
 every circuit on screen is simulated, drawn and plotted by the editor code.
@@ -39,7 +48,7 @@ python3 -m http.server 4180 --directory .    # from inertance-site/
 | `app-src/app.css` | All shell styling: tokens, grid, header, builder, transport, waveforms, phone sheets | yes |
 | `app-src/host.js` | Glue: shell widgets ⇄ editor controls and `window.circuitEditor` API | yes |
 | `app-src/assets/` | Logo SVGs and `water-symbols.svg` (designs' detailed set + tee, hose, connector) | yes |
-| `app-src/analytics/` | Optional Umami consent adapter, styling and public website ID | yes |
+| `app-src/analytics/` | Optional Umami/PostHog consent adapter, styling and public tracking configuration | yes |
 | `assets/analytics/` | Generated analytics assets shared by app and About | no |
 | `build_app.py` | Inlines CSS, shell, the editor modules and host.js into `app/index.html`; copies assets | rarely |
 | `update_from_simulator.py` | One command: cwas dev pages + checks, both site builds, both browser checks | rarely |
@@ -53,7 +62,7 @@ Build and check:
 ```sh
 python3 build_app.py
 node tools/check-app.cjs     # needs Playwright + Chrome; see header of the file
-node tools/check-analytics.cjs # never sends test events to Umami
+node tools/check-analytics.cjs # never sends test events to providers
 ```
 
 `build_app.py` fails loudly if the shell is missing an id the editor looks up, has
@@ -86,54 +95,80 @@ value and dispatching `change`/`input`/`click` — or through API methods the ed
 provides. If the shell needs new circuit behavior, add it to the editor and its API
 in `cwas`, then rebuild.
 
-### Optional usage analytics (local implementation, 7 October 2026)
+### Optional usage analytics (PostHog addition, 10 October 2026)
 
-Umami Cloud's free Hobby website is registered in its EU region. The public
-website UUID is in `app-src/analytics/config.json`; set it to an empty string and
-rebuild to disable collection. `build_app.py` validates that field and produces
-`assets/analytics/{config.js,analytics.js,analytics.css}`. Include those generated
-assets when publishing; the mirror's existing `assets/` allowlist copies them.
-Account credentials and API keys never belong in these files. No cloud SDK runs
-on the website: the local adapter uses Umami's documented public
-[`POST /api/send`](https://docs.umami.is/docs/api/sending-stats) endpoint directly.
+Umami Cloud Hobby is already published; the additional PostHog integration is
+local and awaits the normal coordinated release. Both projects use EU regions.
+`app-src/analytics/config.json` holds the public Umami website UUID and PostHog
+`phc_` project token/ingestion host. Blank either token to disable that provider,
+or both to disable collection. `build_app.py` validates the UUID, public token
+prefix and official ingestion host, then produces
+`assets/analytics/{config.js,analytics.js,analytics.css}`. The mirror's existing
+`assets/` allowlist copies them. Private API keys and credentials never belong
+in these files.
+
+No cloud SDK runs on the website. The local adapter uses Umami's documented
+[`POST /api/send`](https://docs.umami.is/docs/api/sending-stats) and PostHog's
+[`POST /i/v0/e/`](https://posthog.com/docs/api/capture) public endpoints directly.
+An OPTIONS-only check confirmed the EU PostHog endpoint accepts Inertance's
+JSON POST. Production ingestion still needs verification after publication.
 
 Collection runs only over HTTPS on the four production apex/www hostnames, on
 `/app/` and `/about/`, after an explicit Allow choice. Localhost, previews, root
 redirects and the older lab are excluded. Help and About have Analytics settings.
-Allow/decline choices use versioned local storage for 180 days per origin; missing,
-invalid, outdated or expired choices default to off. DNT/GPC override acceptance.
-Withdrawal aborts requests still in flight and stops future requests, including
-in other same-origin tabs. Already delivered requests cannot be recalled.
+Allow/decline choices use version 2 local storage for 180 days per origin. Old
+Umami-only acceptance requires a fresh choice; a valid version 1 decline stays
+off without another prompt. Missing, invalid, future-dated or expired choices
+keep collection off. DNT/GPC override acceptance. Withdrawal aborts in-flight
+requests to both providers, stops future requests and clears memory-only IDs,
+including in other same-origin tabs. Delivered requests cannot be recalled.
 
-The entire JSON payload is `type: event` and `{website, hostname, url}` plus an
-optional allowlisted `name`. Paths are fixed at page initialization and never
-include search/hash. No event properties, titles, referrers, screen measurements,
-language, identities, performance reporting or replay are sent. Normal IP and
-User-Agent headers reach the provider and underpin its approximate visitor,
-device and location statistics. Response cache/session/visit IDs are ignored.
-Requests omit credentials and referrers, time out after five seconds and are
-never retried or queued. Traffic is capped at 60 events/minute, 300/page and
-eight simultaneous sends to contain accidental repeated actions.
+Umami receives `type: event` and `{website, hostname, url}`, plus an optional
+allowlisted `name`. PostHog receives the public token, `$pageview` or the same
+fixed name, a random anonymous `distinct_id`, and only these properties:
+`$current_url`, `$host`, `$pathname`, `$session_id`, `$process_person_profile:
+false`, `$is_identified: false` and `$geoip_disable: true`. URLs are reconstructed
+from the approved production host and path, with no query/hash. IDs are generated
+only after consent and held in page memory, never cookies/local/session storage.
+Reloading, another tab or renewed consent creates fresh IDs. UUIDv7 sessions
+rotate after 30 minutes without a captured action or 24 hours. This intentionally
+cannot measure returning people or cross-page unique users reliably.
 
-The shared editor emits `circuit-editor:action` on its root with only
-`detail.name`. These completion hooks carry no circuit values or import text;
-standalone editor pages do not load the analytics adapter. The website listens
-for them after initialization. `simulation_started` and `circuit_edited` are
-sent at most once per consent period within a page. Other fixed names are
-`preset_<approved key>`, `mode_ideal|ripple|leakage|transients|fallback`,
-`arrange_completed`, `default_view_reset`, `export_json_copy|download` and
+No circuit data, titles, referrers, identities, arbitrary event properties,
+automatic click capture, performance reporting or replay are sent. Normal IP and
+User-Agent headers reach both providers; Umami uses them for approximate visitor,
+device and location statistics. PostHog location enrichment and person profiles
+are disabled. Response identifiers are ignored. Requests omit credentials and
+referrers, reject redirects, time out after five seconds, and are never retried
+or queued. Limits are 60 captured actions/minute, 300/page and eight concurrent
+requests across both providers. One provider's failure does not suppress the
+other or affect the simulator.
+
+The shared editor emits `circuit-editor:action` with only `detail.name`.
+Standalone pages do not load the adapter. The website listens after initial
+preset setup. `simulation_started` and `circuit_edited` are sent once per consent
+period within a page. Other fixed names are `preset_<approved key>`,
+`mode_ideal|ripple|leakage|transients|fallback`, `arrange_completed`,
+`default_view_reset`, `export_json_copy|download` and
 `import_<json|spice|kicad|unknown>_<preview_success|preview_failed|applied|apply_failed>`.
-There is no event for opening an import dialog, cancelling it, loading the
-default preset or an automatic arrangement. Preview success is distinct from
-actually applying a circuit; modes describe the effective solver mode with a
-separate fallback category. Fixed names avoid Umami's event-property quota costs.
+No event records opening/cancelling a dialog, the default preset or automatic
+arrangement. Preview and apply outcomes remain distinct. The new adapter needs
+no additional simulator hooks.
 
-The privacy notice is in `about/index.html`. The free plan retains six months of
-data; consent-based counts omit visitors who decline, use privacy signals or
-block requests. There is no historical traffic recovery or reliable count of
-simultaneous users. The account dashboard stays private. Production delivery must
-be checked after a separately approved publication, with one real consenting
-visit, without bulk fake events or a public load test.
+The privacy notice is in `about/index.html`. Umami Hobby retains six months;
+PostHog's free plan includes one million analytics events/month and one-year
+retention ([pricing](https://posthog.com/pricing)). Counts exclude visitors who
+decline or block requests. Dashboards remain private. The PostHog project is
+[300801 in the EU account](https://eu.posthog.com/project/300801).
+
+The PostHog plugin connection was verified on 10 October: Codex can read the
+`inertance.org` organization and project 300801 directly, and its public tracking
+token matches this configuration. The project reports no ingested events yet.
+That private read connection is separate from the public tracking token; no
+private API key was added to the website.
+After a coordinated publication, verify one real consenting visit in the
+PostHog dashboard before relying on reports. The HTTP response alone does not
+prove an event was ingested. Do not bulk-send synthetic production events.
 
 ### Editor DOM contract (ids that must exist)
 
@@ -141,7 +176,9 @@ Header/menus: `ed-converter ed-new ed-load ed-save ed-preset ed-freewheel
 ed-hydraulic-review ed-arrange ed-default-view ed-undo ed-redo ed-magnetic-mode ed-pressure-scale
 ed-pressure-gain ed-pressure-gain-label ed-reference ed-travel ed-pressure-range`.
 Builder: `ed-palette ed-add` (visually hidden; the part buttons drive them).
-Canvas: `ed-canvas ed-pipe ed-minus ed-plus ed-fit ed-status ed-inspector-toggle`,
+Canvas: `ed-canvas ed-pipe ed-minus ed-plus ed-fit ed-status ed-inspector-toggle
+ed-schematic-name ed-save-checkpoint ed-autosave-status`,
+browser saving: `ed-save-browser ed-browser-save-status`,
 JSON dialog `ed-transfer ed-json ed-copy ed-download ed-import ed-browse
 ed-close-transfer ed-transfer-status ed-file`.
 External import dialog: `ed-external-open ed-external-dialog ed-external-close
@@ -205,8 +242,7 @@ Fixtures, native CLI validation and exact semantics are documented in the siblin
   strip with mean / max / min / RMS for V and I (time-weighted) and the part's
   constitutive equation; editor charts; values & calculations text.
 - **Theme:** light/dark shell, stored in `localStorage['inertance-theme']`. The
-  hydraulic drawing stays black-on-paper in both themes on purpose (pressure color
-  semantics). Other stored prefs: builder width/visibility, speed, loop, waveform
+  hydraulic canvas follows the theme, including labels and crossing halos. Pressure colors keep their physical meaning. Other stored prefs: builder width/visibility, speed, loop, waveform
   collapse (all `inertance-*`, try/catch guarded).
 - **Phones (≤ 760 px):** stacked page with a bottom dock (Canvas, Build, Inspect,
   Run, Signals). Build and Properties open as bottom sheets; choosing a part closes
@@ -265,13 +301,14 @@ wall, actual winding voltage vs painted pressure, overlays/guards, undo/JSON,
 playback cost, desktop and 390 px phone. `update_from_simulator.py` includes it
 and the new `check-editor-modes.cjs` physics check. Screenshots are in `tools/out/`.
 
-## Mode UX update — 7 October 2026
+## Mode UX update — 7 October 2026 (controls revised 10 October)
 
-The primary fidelity buttons are Ideal and Ripple. Ripple defaults to four verified
-steady-state cycles from the actual finite-L/C solver. Advanced **Transients /
-Leakage** has independent startup and magnetic leakage controls: `ed-model-view`
-is now a Transients checkbox, while `ed-model-leakage` toggles the existing guarded
-flyback/forward finite-coupling RC equivalent. Unvalidated leakage remains disabled.
+The primary fidelity buttons are Ideal, Ripple and Leakage · Experimental.
+Ripple defaults to four verified steady-state cycles from the actual finite-L/C
+solver. `ed-model-view` is a Transients checkbox; selecting `ed-model-leakage`
+enables Startup with the existing guarded flyback/forward finite-coupling RC
+equivalent. Unvalidated leakage remains disabled. Controls are flat and short;
+the info controls contain explanations and diagnostic details.
 Reduced Ideal locks Transients; general Ideal retains its startup dynamics.
 Explicit saved/legacy Startup and imported circuits retain that requested view,
 and the main Ripple button restores periodic view. JSON and undo/redo preserve it.
@@ -286,8 +323,8 @@ playback/plots. The current half bridge fails this budget; use Transients.
 
 `model.duration` is the displayed window; `metadata.windowStart`,
 `sample.sourceTime` and `metadata.settling` describe the solved physical clock.
-Manual intervention uses sourceTime and selects Transients. The advanced section
-also shows the actual horizon and convergence residuals. Both-shell browser mode
+Manual intervention uses sourceTime and selects Transients. Solver information
+shows the actual horizon and convergence residuals. Both-shell browser mode
 checks cover these contracts. The pipeline includes `check-editor-settling.cjs`.
 See sibling cwas SIMULATION-MODES.md for the equations, tolerances and limitations.
 
@@ -295,10 +332,11 @@ See sibling cwas SIMULATION-MODES.md for the equations, tolerances and limitatio
 
 All ten converter/AC presets and the three File examples now load hand-designed
 course-style drawings without automatically arranging them. Explicit Auto arrange
-remains in the header. **View → Reset to default example view** restores positions,
-orientation and pipe bends, preserving electrical values, simulation settings and
-playback time. It is undoable. Added/deleted parts or changed connections disable
-reset and explain why; loaded JSON and imported drawings retain their geometry.
+remains in the header. The geometry-only `resetDefaultView()` API restores
+positions, orientation and pipe bends, preserving values/settings/playback.
+It is undoable and requires matching parts/connections. On 10 October the visible
+button changed to **Discard changes**; see below. Loaded JSON and imported
+drawings retain their supplied geometry.
 The playback button is separately labeled **Reset time**.
 
 `window.circuitEditor.defaultExampleView` reports availability and the reason;
@@ -310,3 +348,164 @@ the unit and both-shell browser checks; screenshots/contact sheets are under
 part of this implementation.
 
 Validation on 7 October: update_from_simulator.py --skip-lab completed 12 simulator checks, the app contract build and four browser checks (app, both-shell modes, imports and curated layout/reset). The lower-memory mode-browser fixture also passed separately after the pipeline. Local review remains at http://localhost:4180/app/; no publication was performed.
+
+### Memristor component and example — local, 10 October 2026
+
+Both the Build palette and example selector include Memristor. The compact
+`#memristor` comparison drives a native M1 and fixed Rref with a slow 0.5 Hz sine.
+The default/selected M1 probe has voltage, current (with dashed Rref comparison),
+resistance, plug state and I–V views. Properties exposes Roff/Ron in Ω, QD in C,
+x0, hard/Biolek window and p, plus a larger live mechanism. Source units stay
+explicit; no unmodeled comparator, threshold or pulse source is implied.
+
+Physics is in cwas, using coupled state/conductance MNA and memory-aware periodic
+verification. Host `sample.memristors[id]` exposes x/resistance/window/power;
+`signal.samples` adds resistance/state to the existing voltage/current probe.
+JSON preserves configured x0 rather than playback memory; replay starts the
+selected solved window. Transients starts at x0. Transients shows history, Ripple verifies periodic memory and
+can honestly fail; Ideal keeps the same memory equations. Automatic magnetic
+Leakage combinations are disabled. External device/subcircuit imports are rejected
+rather than converted to a resistor. Details/evidence: cwas docs/MEMRISTOR.md.
+
+Source edits are limited to shell palette, host descriptions/equations/readouts,
+build_app.py's dynamic-ID list and pipeline tests. Modules are loaded through
+the shared manifest. No publication or commit/push is part of this integration.
+
+Validation: full `python3 update_from_simulator.py` passed 13 numerical suites,
+app/lab builds and six browser suites, including memristor sample/paint/editing/
+JSON/history/stop-slip/wiring tests in both shells at 1440 and 390 px. Final text
+was rebuilt and the memristor browser suite passed again. Desktop and phone
+screenshots were inspected; see cwas `tmp/memristor-integration/`. Local review:
+http://localhost:4180/app/?probe=M1#memristor. Build stamp is `cwas 6e6a484 +
+uncommitted changes`; publishing remains a separate action.
+
+### Compact Simulation controls — 10 October 2026
+
+The primary mode choices are Ideal, Ripple and Leakage · Experimental. Selecting
+Leakage enables Transients by default; explicit saved views still load unchanged.
+The existing finite-k/RC support for recognized flyback/reset-forward remains
+limited and experimental; general leakage is not implemented.
+
+Simulation setup has flat groups and choice buttons, with short visible labels.
+Backing select IDs remain for the shared editor/host integration contract but are
+hidden; buttons update the same values and events. Timing's dynamic switch list
+also uses these buttons. Long mode/device/timing/appearance explanations, support
+reasons, solved details and effective JSON are in info popovers, available by
+hover, keyboard focus or click. Escape/outside click dismisses them. Startup,
+Steady state, Periodic and Unavailable are the compact visible status labels.
+Action-menu explanatory notes also use info controls. File/View/Help actions
+retain their existing navigation.
+
+Both editor shells are rebuilt from the shared source. Mode browser checks cover
+the new controls, Leakage's Startup default, existing solved-state/history
+invariants and desktop/phone widths. No deployment is included.
+
+## Custom schematics and Discard changes (10 October 2026)
+
+**Discard changes** beside zoom restores the whole schematic, including values,
+settings, deleted/added parts, connections and layout. Examples return to the
+selected example's initial document; imports/JSON return to their loaded version.
+Custom workspaces return to their last explicit **Save** checkpoint (also available
+through **File → Save in browser…**).
+Discard cancels tools/arrangement, fits, recalculates the restored mode and
+resets playback to its beginning. Undo/Redo recovers
+edits and the previous viewport. The old layout-only API remains available.
+
+**Make custom schematic…** is the final topology dropdown option. Browser-saved
+workspaces appear under **My schematics · this browser**. Completed edits autosave
+an independent draft; explicit Save names the workspace and sets its checkpoint.
+Reload resumes the last custom draft unless a recognized hash selects another
+circuit. Browser storage uses localStorage (`inertance-schematics-v1`), not cookies,
+and is specific to this browser/profile/origin. Clearing site data removes it;
+Save JSON gives a portable backup. Storage failures are shown and do not falsely
+confirm a save or replace the previous checkpoint.
+
+Save / Saving… / Saved appears beside Discard changes (`ed-save-checkpoint`).
+Editing an example or import creates Custom schematic 1, 2, etc. with its original
+baseline retained. The clickable project name (`ed-schematic-name`) renames it
+without changing its saved checkpoint. `ed-autosave-status` distinguishes a saved
+working draft from the explicit checkpoint. Autosaves wait 200 ms, then write
+locally; pending drafts flush before workspace/history changes, explicit saves,
+page hide and backgrounding. The canvas toolbar wraps on smaller screens and the
+host observes its height to keep it above the drawing.
+
+Blocked/full browser storage changes the control to Allow cookies to save and
+opens settings guidance, Try again and Save JSON. This uses functional local
+storage independently of optional analytics consent; it cannot change browser
+permissions. Both shells retain `ed-save-browser` and `ed-browser-save-status`.
+The editor API adds `schematic`, `resumeSchematicId`, `discardChanges()`
+and `makeCustomSchematic()`. The host reads state for title/hash/startup; it never
+mutates documents. See sibling cwas docs/CUSTOM-SCHEMATICS.md for history, storage
+failure and multi-tab behavior. The default update pipeline runs the storage unit
+check and both-shell desktop/phone custom/discard browser check. Screenshots are
+under tools/out/schematics/. This follow-up is local, with no public deployment.
+
+### Loss/reference labeling follow-up — 10 October 2026
+
+Device losses is a checkbox beside Transients (off=ideal switch/diode conduction,
+on=configured component losses), backed by the same hidden ed-model-losses select
+and saved loss setting. The new ed-device-losses ID mirrors the effective setting
+and guards: Ideal locks off; full-bridge boost Ripple locks on. No solver behavior
+was added. Compare ideal replaces the simulation Reference label and has its own
+info explanation for the dashed course-reference overlay. Appearance uses Color
+zero to distinguish its voltage/color origin. Info circles are 14 px with a larger
+invisible pointer target. The shared build checks the new ID in both shells.
+
+## Combined follow-up — 11–12 October 2026
+
+Community and Feedback are restored as separate in-app panels, with phone dock
+entries, a resizable desktop slot, previews/search/download/open, local contribution
+drafts/review and feedback preparation. Current editor load/history supplies the
+workspace; no older solver is included. Browser-local contact data never enters
+gallery/download exports. There is no shared service or live submission inbox.
+Sources: app-src/community.js, community.css and shell; build_app.py packages only
+static seed JSON in app/community. See cwas COMMUNITY-EXPLORATION.md for provenance.
+
+The dedicated Playback menu/panel is removed. Run/Pause, scrub, physical time and
+Reset time remain in a compact strip; viewing speed/loop are native dropdowns beside Run/Pause (restored on 12 October).
+Properties and explicit undoable Auto arrange live inside Builder. Clicking a
+component opens Properties; dragging enters Builder while preserving capture and
+focus, and canvas panning stays separate. Phones reveal Builder after the drag.
+
+The real native macOS schematic select is retained at the user's request on
+12 October, with Converters, Examples, Memristor and custom groups. OS popup
+positioning remains an explicit limitation. Inline name edits support Enter/blur
+commit and Escape cancel. Unsaved example-derived customs retain their origin,
+so Discard restores the original example name/selection without deleting drafts.
+Explicit custom checkpoints retain their saved identity; undo/redo includes names.
+
+Leakage is selectable independently of physical support and enables Transients by
+default. Unsupported effects/parameters stay disabled and explained. Native memory
+retains its MNA/state/plot contracts with the reviewed enlarged wheel, right-edge
+outlet and wet-pocket tracers. Coupled water geometry scales with winding radii.
+Pipes, water and particles share unique flow-chain geometry for merges/branches.
+The update pipeline includes the both-shell follow-up interaction/geometry suite,
+with desktop/phone, themes, native groups, name/history/origin, guard, component
+click/drag, restored panels, extreme turns and gap/rotation coverage.
+
+### 12 October interface follow-up
+
+Editing opens Builder and hides Simulation, while clicking a component still opens Properties. Timing/model changes remain in Simulation. Speed and loop are native dropdowns in the Run/Pause strip. Waveform details uses labeled statistics cards and SI units. Delete beside Save deletes the current browser schematic with Undo/Redo recovery. Community's contribution control is at the top. Feedback sends privately through FormSubmit with optional Reply-To and no app character limits; direct GitHub reporting and existing-issues links remain available. Consent can be dismissed by Allow even in previews, where collection stays disabled. The native circuit dropdown includes three editable memristor demonstrations using the shared solver.
+
+### Direct private feedback — 12 October
+
+Send feedback replaces the local draft/download flow. It posts privately to `lucas@wybrandt.dk` via FormSubmit, with optional Reply-To and no app-imposed character limits or truncation. The recipient confirmed the required inbox activation. See [FEEDBACK.md](FEEDBACK.md) for delivery behavior and tests. Error and activation responses retain the form text and never claim success. The independent GitHub bug-report and existing-issues links remain available.
+
+## Release licensing and portable sources — 12 October 2026
+
+Visitor Help, About and old lab link to /source/ and /changelog/. Software keeps
+AGPL-3.0-or-later with qualified authorship, existing embedded-art grants and full
+d3 dependency notices. Only teaching/memory-and-circuits.md has the additional
+CC BY-SA grant. Community saves local drafts under versioned proposed future
+terms; old terms are not rewritten and contact stays out of exports. Feedback
+remains private message delivery, not contribution licensing/intake.
+
+`tools/package-source.py` exports explicit committed simulator modules and lab
+inputs beside committed app-src/build/assets/gallery files. It rebuilds in a
+clean temporary directory and compares generated app/lab/analytics/gallery bytes.
+No Git history, research, course PDFs or browser data is exported. Without Git,
+release-input.json freezes the source stamp/date. INERTANCE_BUILD_DATE allows
+deterministic stamping in normal builds. Original hashes, portable changes,
+input revisions and ZIP hashes are published. Input and deployment commits are
+separate to avoid circular revision claims. The full pipeline rejects source
+changes that occur after release preflight.

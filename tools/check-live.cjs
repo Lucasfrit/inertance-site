@@ -53,6 +53,13 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     await page.waitForFunction(() => document.querySelector('#ed-converter').value === 'fullboost');
     await idle();
     assert(await page.evaluate(() => circuitEditor.document.components.some(c => c.type === 'coupled3')));
+    assert.equal(await page.locator('#ed-converter optgroup[label=Memristor] option').count(), 3);
+    for (const key of ['memristor', 'memristorHold', 'memristorStates']) {
+      await page.selectOption('#ed-converter', key); await idle();
+      assert(await page.evaluate(() => Number.isFinite(circuitEditor.sample.memristors.M1.resistance)));
+      assert.equal(await page.evaluate(() => circuitEditor.routes.filter(r => r.failed).length), 0);
+    }
+    await page.selectOption('#ed-converter', 'fullboost'); await idle();
     await page.setViewportSize({ width: 390, height: 844 });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     await page.click('[data-dock=simulation]');
@@ -70,10 +77,25 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     await page.screenshot({ path: path.join(out, 'live-about-phone.png'), fullPage: true });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     assert.deepEqual([...scriptHosts], [origin], 'all runtime JavaScript comes from our own site');
+    const source = await page.goto(origin + '/source/'); assert.equal(source.status(), 200);
+    assert.match(await page.textContent('main'), /AGPL-3.0-or-later/);
+    for (const day of ['07', '12']) {
+      const name = `inertance-2026-10-${day}-source`;
+      const verified = await page.evaluate(async name => {
+        const zip = await fetch(`/source/${name}.zip`), sum = await fetch(`/source/${name}.sha256`);
+        if (!zip.ok || !sum.ok) return false;
+        const bytes = await zip.arrayBuffer(), expected = (await sum.text()).trim().split(/\s/)[0];
+        const actual = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), b => b.toString(16).padStart(2, '0')).join('');
+        return actual === expected;
+      }, name); assert(verified, name + ' unauthenticated source hash');
+    }
+    for (const path of ['/LICENSE', '/SOFTWARE-NOTICE.md', '/CONTENT-LICENSE.md', '/CONTRIBUTING.md', '/THIRD-PARTY-NOTICES.md', '/assets/vendor/d3.BUNDLE-NOTICES.txt', '/changelog/']) {
+      assert.equal((await page.goto(origin + path)).status(), 200, path);
+    }
     const sitemap = await page.goto(origin + '/sitemap.xml');
     assert.equal(sitemap.status(), 200);
     assert((await sitemap.text()).includes(canonical + '/about/'));
     assert.deepEqual(errors, []);
-    console.log('Production: site entry, committed source stamp, buck playback, fullboost hash, themes, phone, lab, about, sitemap, local runtime scripts and zero browser errors passed. ' + stamp);
+    console.log('Production: site entry, committed source stamp, buck playback, three memory examples, source downloads/hashes, licences/changelog, fullboost hash, themes, phone, lab, about, sitemap, local runtime scripts and zero browser errors passed. ' + stamp);
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

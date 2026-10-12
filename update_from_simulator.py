@@ -29,8 +29,13 @@ CWAS = SITE.parent / "cwas"
 SIM = CWAS / "simulator"
 
 SIM_CHECKS = [
+    "check-editor-memristor.cjs",
     "check-editor-import.cjs",
     "check-editor-model.cjs",
+    "check-editor-preset-timing.cjs",
+    "check-editor-flow-routing.cjs",
+    "check-editor-waveform-reference.cjs",
+    "check-editor-waveform-expressions.cjs",
     "check-editor-modes.cjs",
     "check-editor-settling.cjs",
     "check-editor-general-ideal.cjs",
@@ -40,6 +45,7 @@ SIM_CHECKS = [
     "check-editor-rlc.cjs",
     "check-editor-layout.cjs",   # also rewrites simulator/editor-layout-report.json
     "check-editor-example-layouts.cjs",
+    "check-editor-schematics.cjs",
     "check-lab-model.cjs",       # older fixed-topology lab behind lab/
 ]
 # Browser checks in cwas; they save review screenshots into cwas/simulator/.
@@ -113,6 +119,11 @@ def main():
         for check in SIM_BROWSER_CHECKS:
             run(["node", *(["--expose-gc"] if check in {"check-editor-modes.cjs", "check-editor-settling.cjs"} else []), check], SIM, check)
 
+    # A feature chat can resume while the long checks run. Never publish a
+    # build whose imported sources changed after the release preflight.
+    if args.release and (git(CWAS, "status", "--porcelain", "--", *sources) or git(CWAS, "rev-parse", "--short", "HEAD") != commit):
+        sys.exit("Release inputs changed during validation. Commit a stable simulator snapshot and rerun --release --full.")
+
     step("4 site build")
     run([sys.executable, "build_app.py"], SITE, "build_app.py")
     if not args.skip_lab:
@@ -123,10 +134,22 @@ def main():
         print("  skip  tools/check-app.cjs (--quick)")
     else:
         run(["node", "tools/check-app.cjs"], SITE, "tools/check-app.cjs")
+        run(["node", str(SIM / "check-editor-memristor-browser.cjs")], SITE, "check-editor-memristor-browser.cjs (both shells)")
         run(["node", "tools/check-modes.cjs"], SITE, "tools/check-modes.cjs")
         run(["node", "tools/check-analytics.cjs"], SITE, "tools/check-analytics.cjs (intercepted collector; no public events)")
         run(["node", str(SIM / "check-editor-import-browser.cjs")], SITE, "check-editor-import-browser.cjs (both shells)")
         run(["node", str(SIM / "check-editor-example-layouts-browser.cjs")], SITE, "check-editor-example-layouts-browser.cjs (both shells)")
+        run(["node", str(SIM / "check-editor-schematics-browser.cjs")], SITE, "check-editor-schematics-browser.cjs (both shells)")
+        run(["node", str(SIM / "check-editor-followup-browser.cjs")], SITE, "check-editor-followup-browser.cjs (both shells)")
+
+    if not args.quick:
+        run(["node", str(SIM / "check-editor-oct12-browser.cjs")], SITE, "check-editor-oct12-browser.cjs")
+
+    if not args.quick:
+        run(["node", "tools/check-feedback.cjs"], SITE, "tools/check-feedback.cjs (intercepted delivery)")
+
+    if args.release and git(CWAS, "status", "--porcelain", "--", *sources):
+        sys.exit("Release inputs changed during browser checks. Rerun against a stable committed snapshot.")
 
     step("6 summary")
     changed = git(SITE, "status", "--porcelain", "--", "app", "lab", "assets/analytics")

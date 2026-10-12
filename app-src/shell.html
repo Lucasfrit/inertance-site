@@ -20,6 +20,8 @@
         <button id="ed-new" type="button">New blank circuit</button>
         <button id="ed-external-open" type="button">Import KiCad / LTspice · Experimental…</button><button id="ed-load" type="button">Open JSON…</button>
         <button id="ed-save" type="button">Save JSON…</button>
+        <button id="ed-save-browser" type="button">Save in browser…</button>
+        <span id="ed-browser-save-status" class="menu-note" role="status" aria-live="polite"></span>
         <hr>
         <span class="menu-label">Examples</span>
         <button id="ed-preset" type="button">Capacitor buffer</button>
@@ -30,28 +32,17 @@
 
     <button class="head-button active" type="button" data-host="builder-toggle" aria-pressed="true" title="Build and connect pipes; close to select and move components">Build</button>
     <button class="head-button" type="button" data-host="setup-toggle" aria-pressed="false">Simulation</button>
-    <button id="ed-inspector-toggle" class="head-button" type="button" aria-expanded="false" aria-controls="ed-inspector">Properties</button>
 
-    <details class="menu" data-menu>
-      <summary>Playback</summary>
-      <div class="menu-body settings">
-        <p class="menu-note">Ripple shows verified steady-state cycles. Enable Transients under Transients / Leakage for startup from zero energy. Reduced Ideal is periodic without startup; general Ideal component dynamics retain startup.</p>
-        <label>Loop <select data-host="loop-menu"><option value="1">Continuous</option><option value="0">One run</option></select></label>
-      </div>
-    </details>
 
     <details class="menu" data-menu>
       <summary>View</summary>
       <div class="menu-body settings wide">
-        <button id="ed-default-view" type="button">Reset to default example view</button>
-        <p class="menu-note">Restore example positions and pipe bends. Keeps your electrical values and simulation settings. Undo restores the previous layout.</p>
+        <span class="info-wrap"><button type="button" class="info-button" data-info="menu-info-2771" aria-label="Discard changes information" aria-expanded="false" aria-controls="menu-info-2771">i</button><div id="menu-info-2771" class="info-content" popover="auto" role="dialog" aria-label="More information"><p>Discard changes beside the canvas zoom controls restores the whole original schematic, including values and connections. For custom schematics it restores your last Save in browser. Undo recovers discarded edits.</p></div></span>
         <b>Panels</b>
         <label>Builder <input type="checkbox" data-panel="builder" checked></label>
         <label>Simulation setup <input type="checkbox" data-panel="setup"></label>
-        <label>Properties <input type="checkbox" data-panel="properties"></label>
-        <label>Playback <input type="checkbox" data-panel="playback" checked></label>
         <label>Waveforms <input type="checkbox" data-panel="waveforms" checked></label>
-        <p class="menu-note">Builder and Simulation setup can be open together. Panel choices are saved on this device.</p>
+        <span class="info-wrap"><button type="button" class="info-button" data-info="menu-info-3380" aria-label="Panel information" aria-expanded="false" aria-controls="menu-info-3380">i</button><div id="menu-info-3380" class="info-content" popover="auto" role="dialog" aria-label="More information"><p>Builder and Simulation setup can be open together. Panel choices are saved on this device.</p></div></span>
 
       </div>
     </details>
@@ -63,7 +54,8 @@
         <p>Pick a part in the Builder, then click the canvas to place it (R rotates, Esc cancels). Choose Connect, click to start a pipe and click again to finish. Circles along pipes create branches; nearby terminals snap. Red rings mark loose ends. Drag empty space to pan. Drag a part to move it with its pipes; Shift-drag detaches it. Drop a loose two-terminal part onto a highlighted pipe to insert it in series. Crossings do not connect.</p>
         <p>Click a switch body to toggle it. A diode is a swing check valve that only opens with forward flow. Click a part or pipe to probe its voltage and current.</p>
         <b>What the simulation assumes</b>
-        <p>Ripple defaults to verified steady state; advanced Transients starts from zero stored energy. Educational switched RLC solver (backward Euler), not SPICE: DC and sine supplies, resistors, capacitors, inductors, 2–4 coupled windings (k = 1 by default), PWM switches and up to eight diodes (forward drop + 0.01 Ω, no reverse current or recovery). Wires are ideal. Leakage mode includes an inspectable primary RC snubber for recognized flyback and forward circuits. Saturation and reverse recovery are not modeled. Floating nodes and interrupted inductor current are reported rather than hidden.</p>
+        <p>Ripple defaults to verified steady state; Transients starts from zero stored energy. Educational switched RLC solver (backward Euler), not SPICE: DC and sine supplies, resistors, capacitors, inductors, 2–4 coupled windings (k = 1 by default), PWM switches and up to eight diodes (forward drop + 0.01 Ω, no reverse current or recovery). Wires are ideal. Leakage mode includes an inspectable primary RC snubber for recognized flyback and forward circuits. Saturation and reverse recovery are not modeled. Floating nodes and interrupted inductor current are reported rather than hidden.</p>
+      <p><a href="../source/">Software, release source &amp; licences</a> · <a href="../changelog/">Changelog</a></p>
       <p><a href="../about/">About Inertance, contact &amp; privacy</a> · <a href="https://github.com/Lucasfrit/inertance-site/issues">Report a problem</a></p>
       <p><button type="button" data-analytics-settings>Analytics settings</button></p>
         <p class="menu-note build-stamp" data-host="build"></p>
@@ -71,7 +63,7 @@
     </details>
 
     <span class="head-spacer"></span>
-    <button id="ed-arrange" class="head-button" type="button">Auto arrange</button>
+
     <button id="ed-undo" class="head-button" type="button" aria-label="Undo">Undo <kbd>⌘Z</kbd></button>
     <button id="ed-redo" class="head-button" type="button" aria-label="Redo">Redo <kbd>⇧⌘Z</kbd></button>
     <button class="head-button" type="button" data-host="theme">Dark mode</button>
@@ -81,60 +73,59 @@
   <aside class="model-bar setup-panel" aria-label="Simulation model">
     <div class="setup-head"><b>Simulation setup</b><button type="button" data-host="setup-close" aria-label="Close simulation setup">×</button></div>
     <div class="model-controls">
-      <form data-host="timing-form" class="timing-form"><b class="setup-section-title">Run length &amp; switching</b><div class="timing-length">
-        <label>Total time · ms<input data-host="sim-duration" type="number" min=".001" max="10000" step="any" required></label>
+      <form data-host="timing-form" class="timing-form"><b class="setup-section-title">Timing <span class="info-wrap"><button type="button" class="info-button" data-info="ed-timing-info" aria-label="Timing information" aria-expanded="false" aria-controls="ed-timing-info">i</button><div id="ed-timing-info" class="info-content" popover="auto" role="dialog" aria-label="Timing information"><p data-host="timing-note"></p></div></span></b><div class="timing-length">
+        <label>Time · ms<input data-host="sim-duration" type="number" min=".001" max="10000" step="any" required></label>
         <label data-host="cycles-label">Cycles<input data-host="sim-cycles" type="number" min=".001" max="5000" step="any"></label></div>
-        <label>Pulse start (ms, non-PWM switches)<input data-host="pulse-start" type="number" min=".001" max="10000" step="any" required></label>
+        <label>Start · ms<input data-host="pulse-start" type="number" min=".001" max="10000" step="any" required></label>
         <label>Switch<select data-host="timing-switch"></select></label>
         <div data-host="pwm-timing">
           <label>Freq · kHz<input data-host="switch-frequency" type="number" min=".001" max="100" step="any"></label>
           <label>Duty · %<input data-host="switch-duty" type="number" min=".001" max="99.999" step="any"></label>
           <label>Phase · %<input data-host="switch-phase" type="number" min="0" max="99.999" step="any"></label>
         </div>
-        <label data-host="pulse-timing">Pulse duration (ms)<input data-host="switch-pulse" type="number" min=".001" max="10000" step="any"></label>
+        <label data-host="pulse-timing">Pulse · ms<input data-host="switch-pulse" type="number" min=".001" max="10000" step="any"></label>
         <button type="submit">Apply timing</button>
-        <p class="menu-note" data-host="timing-note"></p>
-      </form>
-      <fieldset class="setup-group"><legend>Model fidelity</legend><div class="fidelity-options">
-      <button id="ed-model-ideal" type="button" aria-pressed="false">Ideal</button>
-      <button id="ed-model-ripple" type="button" aria-pressed="true">Ripple</button>
-      </div></fieldset>
-      <fieldset class="setup-group"><legend>Simulation</legend>
-      <label>Device losses <select id="ed-model-losses"><option value="ideal">Ideal conduction</option><option value="configured">Configured losses</option></select></label>
-      <label class="setup-overlay"><input id="ed-model-overlay" type="checkbox"> Course reference overlay</label>
 
-      </fieldset>
-      <details class="model-details"><summary>Transients / Leakage · advanced</summary>
-        <p>Ripple shows four verified steady-state cycles with finite L/C ripple. Settling extends the solve within a fixed budget; failure is reported. Ideal keeps the existing course reductions or ideal-component dynamics.</p>
-        <label class="model-transients"><input id="ed-model-view" type="checkbox"> Transients · startup from zero energy</label>
-        <button id="ed-model-leakage" type="button" aria-pressed="false">Leakage · finite coupling + RC</button>
-        <p>Transients includes startup and switch-cycle ripple. Leakage independently adds finite magnetic coupling and an inspectable primary RC snubber, validated only for recognized flyback and reset-forward. Unavailable circuits keep this control disabled.</p>
-        <label>Leakage coupling k <input id="ed-model-coupling" type="number" min=".001" max="1" step=".001" value=".98"></label>
-        <label>Snubber C (µF) <input id="ed-model-cap" type="number" min=".001" max="1000" step="any" value="5"></label>
-        <label>Snubber R (Ω) <input id="ed-model-resistance" type="number" min=".001" max="100000" step="any" value="8"></label>
-        <label>Minimum steps <input id="ed-model-steps" type="number" min="100" max="350000" step="100" value="5000"></label>
-        <p id="ed-model-support"></p>
-        <pre id="ed-model-equivalent"></pre>
-        <details><summary>Inspect effective circuit JSON</summary><pre id="ed-model-json"></pre></details>
-        <p>Ideal devices means zero diode drop/on resistance and zero switch on resistance. The source feed and snubber resistor remain explicit losses. Configured losses retains editable conduction parameters, including 0.01 Ω diode resistance by default. No recovery, avalanche, saturation or nonlinear Coss model.</p>
-      </details>
-      <details class="setup-visual" open><summary>Simulation appearance</summary><div class="setup-group">        <label>Pressure view <select id="ed-magnetic-mode"><option value="local">Winding-only gradient</option><option value="split">Two pressure regions</option><option value="circuit" selected>Circuit pressure</option></select></label>
-        <label>Color scale <select id="ed-pressure-scale"><option value="log">Soft logarithmic</option><option value="root">Square-root style</option><option value="linear">Linear</option></select></label>
+      </form>
+<fieldset class="setup-group"><legend>Mode <span class="info-wrap"><button type="button" class="info-button" data-info="ed-mode-info" aria-label="Mode information" aria-expanded="false" aria-controls="ed-mode-info">i</button><div id="ed-mode-info" class="info-content" popover="auto" role="dialog" aria-label="Mode information"><p>Ideal uses the available course reference or ideal-component dynamics. Ripple displays four verified steady-state cycles with finite L/C ripple; a bounded solve reports failure when it cannot settle. Transients shows startup from zero stored C/L energy (and saved memristor state).</p><p>Leakage is experimental and incomplete. Only recognized flyback and reset-forward currently support finite magnetic coupling with an added primary RC snubber. General leakage behavior is not implemented. Unsupported circuits disable Leakage. Selecting Leakage enables Transients by default.</p><p id="ed-model-note"></p><p id="ed-model-support"></p></div></span></legend><div class="fidelity-options">
+<button id="ed-model-ideal" type="button" aria-pressed="false">Ideal</button>
+<button id="ed-model-ripple" type="button" aria-pressed="true">Ripple</button>
+<button id="ed-model-leakage" type="button" aria-pressed="false">Leakage <small>Experimental</small></button>
+</div><span id="ed-model-status" role="status" aria-live="polite"></span></fieldset>
+<fieldset class="setup-group"><legend>Simulation</legend>
+<div class="setting-row"><label class="setup-overlay"><input id="ed-device-losses" type="checkbox"> Device losses</label><span class="info-wrap"><button type="button" class="info-button" data-info="ed-device-info" aria-label="Device information" aria-expanded="false" aria-controls="ed-device-info">i</button><div id="ed-device-info" class="info-content" popover="auto" role="dialog" aria-label="Device information"><p>Device losses off removes diode voltage drop and switch/diode on-resistance. On uses the component values from Properties (including default diode resistance). This is independent of Transients: losses change component conduction; Transients shows startup. Source, load and snubber resistors stay active in either setting. Ideal mode locks this off; full-bridge boost Ripple requires it on. Reverse recovery, avalanche, saturation and nonlinear Coss are not modeled.</p></div></span></div><select id="ed-model-losses" hidden data-flat-setting aria-label="Device losses"><option value="ideal">Ideal</option><option value="configured">Configured</option></select>
+<label class="setup-overlay"><input id="ed-model-view" type="checkbox"> Transients</label>
+<div class="setting-row"><label class="setup-overlay"><input id="ed-model-overlay" type="checkbox"> Compare ideal</label><span class="info-wrap"><button type="button" class="info-button" data-info="ed-comparison-info" aria-label="Ideal comparison information" aria-expanded="false" aria-controls="ed-comparison-info">i</button><div id="ed-comparison-info" class="info-content" popover="auto" role="dialog" aria-label="Ideal comparison information"><p>Adds dashed, periodic Ideal course-reference curves to the plots for comparison with the active simulation. It does not change the circuit, animation or selected mode. Available only when a validated course reference exists.</p></div></span></div>
+<label class="solver-steps">Steps <span class="info-wrap"><button type="button" class="info-button" data-info="ed-solver-info" aria-label="Solver information" aria-expanded="false" aria-controls="ed-solver-info">i</button><div id="ed-solver-info" class="info-content" popover="auto" role="dialog" aria-label="Solver information"><pre id="ed-model-equivalent"></pre></div></span><input id="ed-model-steps" type="number" min="100" max="350000" step="100" value="5000"></label>
+<span class="effective-label">Effective circuit <span class="info-wrap"><button type="button" class="info-button" data-info="ed-json-info" aria-label="Effective circuit" aria-expanded="false" aria-controls="ed-json-info">i</button><div id="ed-json-info" class="info-content" popover="auto" role="dialog" aria-label="Effective circuit"><pre id="ed-model-json"></pre></div></span></span>
+</fieldset>
+<fieldset class="setup-group leakage-settings" hidden><legend>Leakage</legend>
+<label>Coupling k <input id="ed-model-coupling" type="number" min=".001" max="1" step=".001" value=".98"></label>
+<label>C · µF <input id="ed-model-cap" type="number" min=".001" max="1000" step="any" value="5"></label>
+<label>R · Ω <input id="ed-model-resistance" type="number" min=".001" max="100000" step="any" value="8"></label>
+</fieldset>
+      <fieldset class="setup-visual setup-group"><legend>Appearance <span class="info-wrap"><button type="button" class="info-button" data-info="ed-appearance-info" aria-label="Appearance information" aria-expanded="false" aria-controls="ed-appearance-info">i</button><div id="ed-appearance-info" class="info-content" popover="auto" role="dialog" aria-label="Appearance information"><p>Color zero sets the voltage used as zero for pressure coloring: supply, return or midpoint. It changes colors only. Darker blue means higher relative pressure. Nonlinear scales exaggerate small differences; equal pressure keeps the same color.</p><output id="ed-pressure-range"></output></div></span></legend>        <label>Pressure <select id="ed-magnetic-mode"><option value="local">Winding</option><option value="split">Split</option><option value="circuit" selected>Circuit</option></select></label>
+        <label>Scale <select id="ed-pressure-scale"><option value="log">Log</option><option value="root">Root</option><option value="linear">Linear</option></select></label>
         <label>Contrast <span class="inline"><input id="ed-pressure-gain" type="range" min="0.5" max="4" step="0.1" value="2.5" aria-label="Pressure color contrast"><output id="ed-pressure-gain-label">2.5×</output></span></label>
-        <label>Color reference <select id="ed-reference"><option value="supply">Supply +</option><option value="return">Bottom return</option><option value="midpoint">Supply midpoint</option></select></label>
-        <label>Visual travel <input id="ed-travel" type="number" min=".25" max="3" step=".05" value="1.8"></label>
-        <output id="ed-pressure-range" class="menu-note"></output>
-        <p class="menu-note">Darker blue = higher relative pressure. Nonlinear scales exaggerate small differences; equal pressure keeps the same color.</p></div></details>
+        <label>Color zero <select id="ed-reference"><option value="supply">Supply +</option><option value="return">Return</option><option value="midpoint">Midpoint</option></select></label>
+        <label>Travel <input id="ed-travel" type="number" min=".25" max="3" step=".05" value="1.8"></label>
+        </fieldset>
     </div>
-    <p id="ed-model-note" role="status" aria-live="polite"></p>
+
+
+
+
   </aside>
 
     <aside class="builder" aria-label="Builder">
       <div class="builder-head"><b>Builder</b><span data-host="part-count"></span><button type="button" data-host="builder-close" aria-label="Close builder">×</button></div>
+<div class="builder-actions"><button id="ed-inspector-toggle" class="head-button panel-control" type="button" aria-expanded="false" aria-controls="ed-inspector"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="3" width="16" height="14" rx="2"/><path d="M12 3v14M14 7h2m-2 3h2m-2 3h2"/></svg>Properties</button><button id="ed-arrange" class="head-button arrange-control" type="button" title="Arrange components and pipe routes">Auto arrange</button></div>
       <label class="mini-search">Find part<input type="search" data-host="part-search" placeholder="Type to filter"></label>
       <div class="parts" data-host="parts">
+        <button type="button" data-part="pipe" data-keywords="pipe wire connect connection tube hose" title="Draw a pipe between terminals or branch from an existing pipe · Escape to finish"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#pipe"/></svg><span>Pipe</span></button>
         <button type="button" data-part="source" data-keywords="supply pump battery voltage source dc ac sine"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#pump"/></svg><span>Supply</span></button>
         <button type="button" data-part="resistor" data-keywords="resistor restriction load"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#restriction"/></svg><span>Resistor</span></button>
+        <button type="button" data-part="memristor" data-keywords="memristor memory resistance plug rack"><svg class="water-symbol" aria-hidden="true" viewBox="0 0 40 32"><path d="M2 16h28V3M2 11h23v10H2M9 16h15v5H9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="27" cy="10" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m23 10 8 0m-4-4v8" stroke="currentColor"/></svg><span>Memristor</span></button>
         <button type="button" data-part="capacitor" data-keywords="capacitor accumulator spring piston"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#accumulator"/></svg><span>Capacitor</span></button>
         <button type="button" data-part="inductor" data-keywords="inductor flywheel choke coil"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#flywheel"/></svg><span>Inductor</span></button>
         <button type="button" data-part="diode" data-keywords="diode check valve rectifier"><svg class="water-symbol" aria-hidden="true"><use href="assets/water-symbols.svg#check-valve"/></svg><span>Diode</span></button>
@@ -152,10 +143,10 @@
       <!-- Editor-owned placement controls; the part buttons above drive them. -->
       <div class="sr">
         <label for="ed-palette">Part to place</label>
-        <select id="ed-palette"><option value="source">Supply</option><option value="resistor">Resistor</option><option value="load">Hose / fountain load · review</option><option value="flowmeter">Flowmeter · Pitot</option><option value="pressuremeter">Pressure meter</option><option value="input">Inlet connector</option><option value="output">Outlet connector</option><option value="capacitor">Capacitor · auto DC/AC</option><option value="switch">Switch</option><option value="inductor">Inductor</option><option value="diode">Diode</option><option value="coupled">Coupled · 1+1</option><option value="coupled3">Coupled · 1+2 / reset</option><option value="coupled4">Coupled · 2+2</option><option value="junction">Junction</option></select>
+        <select id="ed-palette"><option value="source">Supply</option><option value="resistor">Resistor</option><option value="memristor">Memristor · memory</option><option value="load">Hose / fountain load · review</option><option value="flowmeter">Flowmeter · Pitot</option><option value="pressuremeter">Pressure meter</option><option value="input">Inlet connector</option><option value="output">Outlet connector</option><option value="capacitor">Capacitor · auto DC/AC</option><option value="switch">Switch</option><option value="inductor">Inductor</option><option value="diode">Diode</option><option value="coupled">Coupled · 1+1</option><option value="coupled3">Coupled · 1+2 / reset</option><option value="coupled4">Coupled · 2+2</option><option value="junction">Junction</option></select>
         <button id="ed-add" type="button" aria-pressed="false" tabindex="-1">Place on canvas</button>
       </div>
-      <p class="builder-note">Connect is active when you enter Build: click two fittings to draw a pipe. Choose a part to place it. <kbd>R</kbd> rotates; <kbd>Esc</kbd> returns to selection.</p>
+      <span class="builder-note">Build <span class="info-wrap"><button type="button" class="info-button" data-info="builder-info" aria-label="Build information" aria-expanded="false" aria-controls="builder-info">i</button><div id="builder-info" class="info-content" popover="auto" role="dialog" aria-label="Build information">      <p>Connect is active when you enter Build: click two fittings to draw a pipe. Choose a part to place it. <kbd>R</kbd> rotates; <kbd>Esc</kbd> returns to selection.</p></div></span></span>
     </aside>
 
     <div class="panel-resizer" role="separator" aria-label="Resize builder" aria-orientation="vertical" tabindex="0" data-host="resizer"></div>
@@ -166,12 +157,16 @@
         <div class="stage"><svg id="ed-canvas" tabindex="0" role="img" aria-label="Editable hydraulic circuit. Drag parts; choose Connect to draw pipes. Drag empty space to pan."></svg></div>
 
         <div class="canvas-tools" role="toolbar" aria-label="Canvas tools">
+          <div class="schematic-identity" hidden><button id="ed-schematic-name" type="button" title="Rename schematic"></button><span id="ed-autosave-status" role="status" aria-live="polite"></span></div>
           <!-- Retained for the editor's control contract; Build drives Connect. -->
           <button id="ed-pipe" type="button" aria-pressed="false" hidden tabindex="-1">Connect</button>
           <button id="ed-minus" type="button" aria-label="Zoom out">−</button>
           <b data-host="zoom">100%</b>
           <button id="ed-plus" type="button" aria-label="Zoom in">+</button>
           <button id="ed-fit" type="button" class="home-control" title="Home · fit circuit" aria-label="Fit circuit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5M5.5 9.5V21h5v-7h3v7h5V9.5"/></svg></button>
+          <span class="sep" aria-hidden="true"></span>
+          <button id="ed-default-view" type="button">Discard changes</button>
+          <button id="ed-save-checkpoint" type="button">Save</button><button id="ed-delete-schematic" type="button" title="Delete this saved schematic" disabled>Delete</button>
         </div>
 
         <div class="inspect-card sr" aria-hidden="true">
@@ -189,13 +184,14 @@
         </div>
       </div>
 
-      <div class="transport">
+      <div class="simulation-controls" aria-label="Simulation controls">
         <button id="ed-play" class="play" type="button">Run</button>
         <span id="ed-time" class="time"></span>
         <input id="ed-scrub" type="range" min="0" max="10000" value="0" aria-label="Physical time">
         <span class="duration" data-host="duration"></span>
-        <label>Speed <select data-host="speed"><option value="25">0.01×</option><option value="36.93">0.03×</option><option value="50" selected>0.1×</option><option value="61.93">0.3×</option><option value="75">1×</option><option value="86.93">3×</option><option value="100">10×</option></select></label>
+      <div class="viewing-controls">        <label>Speed <select data-host="speed"><option value="25">0.01×</option><option value="36.93">0.03×</option><option value="50" selected>0.1×</option><option value="61.93">0.3×</option><option value="75">1×</option><option value="86.93">3×</option><option value="100">10×</option></select></label>
         <label class="loop">Loop <select data-host="loop"><option value="1">Continuous</option><option value="0">One run</option></select></label>
+</div>
         <button id="ed-reset" type="button">Reset time</button>
         <span class="sr"><input id="ed-speed" type="range" min="0" max="100" value="50" step="any" tabindex="-1" aria-hidden="true"><output id="ed-speed-label">0.1×</output></span>
       </div>
@@ -216,9 +212,9 @@
             <button type="button" data-host="plot-reset">Reset zoom</button>
             <label class="signal-select">Probe <select data-host="signal"></select></label>
           </div><p class="menu-note" data-host="report-availability"></p>          <div class="plot-view-note hint" data-host="plot-view-note" hidden></div>
-          <details class="wave-probe" open><summary>Probe information &amp; equations</summary><div class="level-strip" data-host="levels"></div>
-          <div class="equation-card" data-host="equation"></div>
-          <details class="calcs"><summary>Values &amp; calculations</summary><div id="ed-calcs"></div></details></details></aside><div class="wave-charts">
+          <div class="wave-probe"><div class="level-strip" data-host="levels"></div>
+          <details class="wave-equation" open><summary>How it works</summary><div class="equation-card" data-host="equation"></div></details>
+          <details class="calcs"><summary>More calculations</summary><div id="ed-calcs"></div></details></div></aside><div class="wave-charts">
           <div id="ed-plots" class="plots"></div>
 
         </div></div>
@@ -230,6 +226,46 @@
     </aside>
   </div>
 
+<aside id="community-panel" class="community-panel" aria-label="Community circuits">
+  <div class="community-head"><b>Community</b><button id="close-community" type="button" aria-label="Close community panel">×</button></div>
+  <div class="community-content">
+    <button id="share-button" type="button" class="primary community-share">Save to community…</button>
+    <p class="community-note">Experimental · drafts stay on this device. These starter schematics come from Inertance’s built-in examples, not community submissions.</p>
+    <section id="gallery" aria-label="Community schematics"><label class="search"><span class="sr-only">Search circuits</span><input id="search" type="search" placeholder="Search circuits"></label><div id="cards" class="cards"></div><p id="result-count" class="muted" aria-live="polite"></p></section>
+
+    <details id="review" class="utility"><summary>Review demo <span id="queue-count">0</span></summary><p class="muted">Simulated owner controls. Approval only changes this device’s gallery.</p><div id="review-items" class="review-items"></div><p id="review-status" class="status" role="status"></p><button type="button" id="reset-local">Clear local drafts</button></details>
+    <p id="community-status" class="status" role="status"></p>
+  </div>
+</aside>
+<aside id="feedback-panel" class="community-panel" aria-label="Feedback" hidden>
+  <div class="community-head"><b>Feedback</b><button id="close-feedback" type="button" aria-label="Close feedback panel">×</button></div>
+  <div class="community-content">
+    <section id="feedback" aria-label="Feedback form">
+      <p class="muted">Send feedback directly to Lucas, or report a bug on GitHub.</p>
+      <div class="feedback-links"><a href="https://github.com/Lucasfrit/inertance-site/issues/new" target="_blank" rel="noopener">Report a bug ↗</a><a href="https://github.com/Lucasfrit/inertance-site/issues" target="_blank" rel="noopener">View existing issues ↗</a></div>
+      <form id="feedback-form" class="panel" action="https://formsubmit.co/ajax/lucas@wybrandt.dk" method="post">
+        <label>Topic<select id="feedback-kind" name="topic"><option value="idea">Suggestion</option><option value="bug">Bug report</option></select></label>
+        <label>Title<input id="feedback-title" name="title" required placeholder="What could improve?"></label>
+        <label>Details<textarea id="feedback-body" name="message" rows="5" required></textarea></label>
+        <label>Email (optional)<input id="feedback-email" name="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+        <label class="feedback-trap" aria-hidden="true">Leave blank<input name="_honey" tabindex="-1" autocomplete="off"></label>
+        <p class="muted">Your message and optional reply email are sent privately to Lucas via <a href="https://formsubmit.co/" target="_blank" rel="noopener">FormSubmit</a>.</p>
+        <button class="primary" type="submit" id="send-feedback">Send feedback</button>
+        <div id="feedback-result" hidden><p id="feedback-status" role="status" aria-live="polite"></p></div>
+      </form>
+    </section>
+  </div>
+</aside>
+  <dialog id="contribution-dialog">
+    <div class="dialog-heading"><h2>Save to community</h2><button id="close-contribution" aria-label="Close contribution form">Close ×</button></div>
+    <p class="muted">Uses your current circuit automatically. JSON upload is optional. Browser-local draft only; nothing is sent.</p>
+    <p id="submission-source-note" class="source-note" role="status"></p>
+    <form id="submission-form" class="panel"><label>Title<input id="submission-title" required maxlength="100" placeholder="Name your circuit"></label><label>Description<textarea id="submission-description" required minlength="10" maxlength="1600" rows="2" placeholder="Explain the circuit and what to try."></textarea></label><label>Contact email<input id="submission-email" type="email" required maxlength="254" autocomplete="email" placeholder="you@example.com" aria-describedby="contact-note"></label><p id="contact-note" class="muted">For review questions. Excluded from the gallery and sharing downloads. In this demo, saved only in this browser.</p>
+      <details id="submission-options"><summary>More options</summary><div class="form-row"><label>Display name<input id="submission-author" value="Anonymous" required maxlength="50"></label><label>Category<select id="submission-category"><option>Storage</option><option>Switching</option><option>Converters</option><option selected>Other</option></select></label></div></details>
+      <details id="submission-source-options"><summary>Use another JSON file (optional)</summary><label>Circuit JSON file (optional)<input id="submission-file" type="file" accept=".json,application/json"></label><label>Or paste circuit JSON (optional)<textarea id="submission-json" rows="4" spellcheck="false" maxlength="100000"></textarea></label><div class="file-tools"><button type="button" id="use-example">Use current circuit instead</button><span id="file-note">Using current circuit.</span></div></details>
+      <div id="submission-terms" class="submission-terms"><b>Local draft terms · 2026-10-12</b><p>Save only material you created or may share. You retain your rights. Nothing is sent, received or accepted by the project. If you later submit through a supported route, offer your schematic data and explanation under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, and any separately identified code under <a href="../LICENSE">AGPL-3.0-or-later</a>. Identify external sources, licences and AI assistance in the explanation. Facts and standard circuit topologies are not owned by this notice. Use your intended public credit name; private contact email stays out of sharing exports. <a href="../CONTRIBUTING.md">Read contribution terms</a>.</p></div><label class="check"><input type="checkbox" id="submission-permission" required aria-describedby="submission-terms"><span>I may save this material and understand the proposed reuse terms for a future submission.</span></label><button id="save-submission" class="primary" type="submit">Save local draft</button><p id="submission-status" class="status" role="status"></p><div id="submission-result" hidden><div class="actions"><button type="button" id="download-submission">Download sharing draft</button><button type="button" id="view-review">Review draft</button></div></div>
+    </form>
+  </dialog>
   <nav class="mobile-dock" aria-label="Workspace modes">
     <button type="button" class="active" data-dock="canvas">Canvas</button>
     <button type="button" data-dock="build">Build</button>

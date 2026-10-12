@@ -172,7 +172,7 @@ dev/hydraulicanalogy-site/ public Lucasfrit/hydraulicanalogy-site
    Record the simulator short revision for the release.
 3. From `inertance-site`, run `python3 update_from_simulator.py --release`.
    It rebuilds dev pages and both site apps, checks the shell/API contract,
-   runs nine simulator checks and two site browser checks, and refuses dirty
+   runs 18 simulator/model/storage checks and seven browser suites, and refuses dirty
    imported simulator sources. It never commits, pushes or deploys. Do not use
    `--quick` for final validation. `--full` additionally rewrites cwas review PNGs.
 4. Review the generated app at `http://localhost:4180/app/` using
@@ -330,3 +330,14 @@ or physics decisions have been accepted. Promotion/outreach was outside this wor
 - [GitHub custom domains and DNS records](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site)
 - [GitHub Pages HTTPS](https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https)
 - [Scheduled Actions behavior and inactivity](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
+
+## October 12 release-source packaging
+
+The mirror allowlist now also includes source/, changelog/, teaching/, the
+software/content scope manifests, third-party notice and contribution guide.
+Source archives/manifests/hashes are copied without domain rewriting so their
+recorded bytes and provenance remain valid on both domains. Visitor HTML links
+are still mapped to the mirror. Current release-source hashes are in /source/.
+A website input commit precedes its deployment/package commit; do not conflate
+the input revision with the Pages revision. The private technical release record
+holds workflow/live results and rollback evidence after successful deployment.

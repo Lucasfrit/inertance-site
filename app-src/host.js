@@ -66,18 +66,16 @@ converter.addEventListener('change', () => {
   host('title').textContent = ''; // the circuit picker already names a preset
   history.replaceState(null, '', '#' + converter.value);
 });
-const examples = { 'ed-preset': 'Capacitor buffer', 'ed-freewheel': 'Inductor + diode', 'ed-hydraulic-review': 'Load + meters', 'ed-new': 'Untitled circuit' };
-for (const [id, name] of Object.entries(examples)) $('#' + id).addEventListener('click', () => {
-  converter.value = ''; setTitle(name); history.replaceState(null, '', location.pathname + location.search);
-});
-$('#ed-import').addEventListener('click', () => { if ($('#ed-transfer').hidden) { converter.value = ''; setTitle('Imported circuit'); } });
-$('#ed-file').addEventListener('change', () => { converter.value = ''; setTitle('Imported circuit'); });
 
 /* ---------- builder ---------- */
 const palette = $('#ed-palette');
 const parts = $$('[data-part]');
-host('part-count').textContent = parts.length + ' parts';
+host('part-count').textContent = (parts.length-1) + ' parts + pipe';
 parts.forEach(button => button.addEventListener('click', () => {
+  if(button.dataset.part==='pipe'){
+    if(phone.matches){root.dataset.dockFocus='canvas';setSheet(null);}
+    activateConnect();return;
+  }
   palette.value = button.dataset.part;
   fire(palette, 'change');            // editor: armPlacement()
   if (phone.matches) { root.dataset.dockFocus='canvas';setSheet(null); } // give the canvas back so the user can tap to place
@@ -93,9 +91,17 @@ host('builder-toggle').addEventListener('click', e => {
   store.set('builder', hidden ? 'hidden' : 'shown');
   if (hidden) escapeKey(); else activateConnect();
 });
-if (store.get('builder') === 'hidden') host('builder-toggle').click();
+if (store.get('builder') !== 'shown') host('builder-toggle').click();
 
-host('builder-close').addEventListener('click',()=>{if(phone.matches)setSheet(null,false);else if(!work.classList.contains('builder-hidden'))host('builder-toggle').click();});
+let hostStarted=false;
+function enterBuilder(dragging=false){if(!hostStarted)return;setSetup(false);work.classList.remove('builder-hidden');host('builder-toggle').classList.add('active');host('builder-toggle').setAttribute('aria-pressed','true');store.set('builder','shown');if(dragging)root.dataset.dragBuilder='true';if(phone.matches){root.dataset.dockFocus='build';if(!dragging)root.dataset.sheet='build';}syncPanelChecks();refreshDock();}
+root.addEventListener('circuit-editor:component-drag',()=>enterBuilder(true));
+root.addEventListener('circuit-editor:schematic-edit',()=>enterBuilder());
+root.addEventListener('circuit-editor:action',e=>{if(e.detail?.name==='default_view_reset'||e.detail?.name==='arrange_completed'||e.detail?.name==='changes_discarded'||e.detail?.name?.startsWith('preset_'))enterBuilder();});
+converter.addEventListener('change',()=>enterBuilder());
+root.querySelector('#ed-canvas').addEventListener('pointerup',()=>{if(root.dataset.dragBuilder==='true'){delete root.dataset.dragBuilder;if(phone.matches){root.dataset.sheet='build';refreshDock();}}});
+root.querySelector('#ed-canvas').addEventListener('pointercancel',()=>delete root.dataset.dragBuilder);
+host('builder-close').addEventListener('click',()=>{escapeKey();if(phone.matches)setSheet(null,false);else if(!work.classList.contains('builder-hidden'))host('builder-toggle').click();});
 function bindPanelResize(handle,panel,key,min,max){
  const setWidth=value=>{const width=Math.max(min,Math.min(max,value));work.style.setProperty('--'+key,width+'px');store.set(key,width);};
  if(+store.get(key))setWidth(+store.get(key));let drag=null;
@@ -116,10 +122,11 @@ function refreshTools() {
   const pipe = $('#ed-pipe').getAttribute('aria-pressed') === 'true';
   const placing = $('#ed-add').getAttribute('aria-pressed') === 'true';
   host('builder-toggle').title = pipe ? 'Connect active · close Build or press Escape to select components' : placing ? 'Place a component · Escape returns to selection' : 'Open Build to connect pipes or choose components';
-  parts.forEach(b => b.classList.toggle('active', placing && b.dataset.part === palette.value));
+  parts.forEach(b => {const active=b.dataset.part==='pipe'?pipe:placing&&b.dataset.part===palette.value;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
 }
 
 /* ---------- properties panel ---------- */
+root.addEventListener('circuit-editor:component-selected',()=>{if($('#ed-inspector').hidden)$('#ed-inspector-toggle').click();});
 host('inspector-close').addEventListener('click', () => { if (!$('#ed-inspector').hidden) $('#ed-inspector-toggle').click(); });
 $('#ed-inspector-toggle').addEventListener('click', () => {
   $('#ed-inspector-toggle').classList.toggle('active', !$('#ed-inspector').hidden);
@@ -139,7 +146,7 @@ function setSetup(shown) {
   refreshDock();
 }
 function syncPanelChecks() {
-  const values = {builder:phone.matches ? root.dataset.sheet === 'build' : !work.classList.contains('builder-hidden'),setup:!work.classList.contains('setup-hidden'),properties:!$('#ed-inspector').hidden,playback:!$('.transport').hidden,waveforms:!host('waveforms').classList.contains('collapsed')};
+  const values = {builder:phone.matches ? root.dataset.sheet === 'build' : !work.classList.contains('builder-hidden'),setup:!work.classList.contains('setup-hidden'),properties:!$('#ed-inspector').hidden,waveforms:!host('waveforms').classList.contains('collapsed')};
   $$('[data-panel]').forEach(input => input.checked = values[input.dataset.panel]);
 }
 host('setup-toggle').addEventListener('click', () => setSetup(work.classList.contains('setup-hidden')));
@@ -150,7 +157,6 @@ $$('[data-panel]').forEach(input => input.addEventListener('change', () => {
     case 'builder': if(phone.matches) setSheet(shown?'build':null,false); else if(shown===work.classList.contains('builder-hidden')) host('builder-toggle').click(); break;
     case 'setup': setSetup(shown); break;
     case 'properties': if(shown===$('#ed-inspector').hidden) $('#ed-inspector-toggle').click(); break;
-    case 'playback': $('.transport').hidden=!shown; store.set('panel-playback',shown?'shown':'hidden'); break;
     case 'waveforms': if(shown===host('waveforms').classList.contains('collapsed')) host('wave-toggle').click(); break;
   }
   syncPanelChecks();
@@ -169,7 +175,7 @@ function refreshTiming(doc,model){const switches=doc.components.filter(c=>c.type
  host('sim-duration').value=fmt((doc.settings.duration||model?.duration||.04)*1000,6);host('pulse-start').value=fmt(doc.settings.loadOn*1000,6);host('pulse-start').closest('label').hidden=!switches.some(c=>!c.pwm);host('pulse-start').disabled=!switches.some(c=>!c.pwm);populateSwitchTiming(doc);
  host('sim-duration').disabled=!!model?.metadata?.reduced;
  updateCycles();
- host('timing-note').textContent=(model?.metadata?.reduced?'Ideal reduction: fixed four-cycle display. ':model?.metadata?.view==='settled'?'Ripple: four verified cycles are displayed. Total time is the initial settling horizon; the bounded solve may extend it. Enable advanced Transients to show the full run. ':'Transients: total time sets the startup run. Cycles use the selected PWM switch. Apply timing to rerun. ')+(doc.settings.manualEvents?.length?'Manual overrides remain active; restore automatic pulse in Properties.':'');
+ host('timing-note').textContent=(model?.metadata?.reduced?'Ideal reduction: fixed four-cycle display. ':model?.metadata?.view==='settled'?'Ripple: four verified cycles are displayed. Total time is the initial settling horizon; the bounded solve may extend it. Enable Transients to show the full run. ':'Transients: total time sets the startup run. Cycles use the selected PWM switch. Apply timing to rerun. ')+(doc.settings.manualEvents?.length?'Manual overrides remain active; restore automatic pulse in Properties.':'');
 }
 host('sim-duration').addEventListener('input',()=>updateCycles());
 host('sim-cycles').addEventListener('input',()=>updateCycles(true));
@@ -185,9 +191,8 @@ const speed = $('#ed-speed');
 function setSpeed(value) { speed.value = value; fire(speed, 'input'); host('speed').value = value; store.set('speed', value); }
 host('speed').addEventListener('change', e => setSpeed(e.target.value));
 if (store.get('speed') && [...host('speed').options].some(o => o.value === store.get('speed'))) setSpeed(store.get('speed'));
-function setLoop(on) { E.loop = on; host('loop').value = host('loop-menu').value = on ? '1' : '0'; store.set('loop', on ? '1' : '0'); }
+function setLoop(on) { E.loop = on; host('loop').value = on ? '1' : '0'; store.set('loop', on ? '1' : '0'); }
 host('loop').addEventListener('change', e => setLoop(e.target.value === '1'));
-host('loop-menu').addEventListener('change', e => setLoop(e.target.value === '1'));
 setLoop(store.get('loop') !== '0');
 
 /* ---------- waveforms ---------- */
@@ -226,6 +231,7 @@ host('plot-reset').addEventListener('click', () => E.resetPlotZoom());
 
 const equations = {
   source: ['Source', '<i>v</i> = <i>V</i><sub>s</sub>', 'Imposed supply voltage'],
+  memristor: ['Memristor', '<i>v</i> = <i>M(x) i</i> · <i>Q</i><sub>D</sub> d<i>x</i>/d<i>t</i> = <i>i F</i>', 'Forward flow opens the plug; zero flow holds memory; reads disturb it'],
   resistor: ['Resistance', '<i>v</i> = <i>R i</i>', 'Pressure drop follows flow'],
   capacitor: ['Capacitance', '<i>i</i> = <i>C</i> <span class="frac"><span>d<i>v</i></span><span>d<i>t</i></span></span>', 'Stored volume follows voltage'],
   inductor: ['Inductance', '<i>v</i> = <i>L</i> <span class="frac"><span>d<i>i</i></span><span>d<i>t</i></span></span>', 'Flow inertia'],
@@ -262,14 +268,25 @@ function renderLevels(signal, doc) {
   }
   if (!signal || !signal.samples.length) { strip.innerHTML = '<span class="hint">No simulation yet — complete the circuit to see signals.</span>'; card.hidden = true; return; }
   const c = doc.components.find(c => c.id === signal.id);
-  const name = signal.id + (signal.winding !== null ? ` · W${signal.winding + 1}` : '');
-  const parts = [`<b>${name}</b>`, `<span>${signal.metadata?.label||'Ripple'} · ${signal.metadata?.window||'Startup'}</span>`];
-  const keys = signal.kind === 'wire' || c?.type === 'junction' ? [['voltage', 'V', 'v']] : [['voltage', 'V', 'v'], ['current', 'A', 'a']];
-  for (const [key, unit, cls] of keys) {
-    const s = stats(signal.samples, key), sym = unit === 'V' ? 'V' : 'I';
-    parts.push(`<span class="${cls}"><i></i>${unit}</span><code>${sym}̄ ${fmt(s.mean)}</code><code>${sym}max ${fmt(s.max)}</code><code>${sym}min ${fmt(s.min)}</code><code>${sym}rms ${fmt(s.rms)}</code><code>Δ${sym} ${fmt(s.max-s.min)} ${unit}</code>`);
+  const escape=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const number=(value,unit)=>{const size=Math.abs(value);if(size>0&&size<1e-12)return `≈0 ${unit}`;const [factor,prefix]=unit==='%'?[1,'']:size>=1e6?[1e-6,'M']:size>=1e3?[.001,'k']:size>0&&size<1e-6?[1e9,'n']:size>0&&size<.001?[1e6,'µ']:size>0&&size<1?[1000,'m']:[1,''];return `${Number((value*factor).toPrecision(3))} ${prefix}${unit}`.trim();};
+  const name = signal.id + (signal.winding !== null ? ` · Winding ${signal.winding + 1}` : '');
+  const type=signal.kind==='wire'?'Pipe voltage':D.types[c?.type]?.label||'Probe';
+  const parts = [`<div class="probe-heading"><span class="eyebrow">Selected probe</span><strong>${escape(name)}</strong><span>${escape(type)}</span></div>`, '<p class="stats-window">Statistics for the whole displayed time window.</p>'];
+  const keys = signal.kind === 'wire' || c?.type === 'junction' ? [['voltage', 'V', 'Voltage', 'v']] : [['voltage', 'V', 'Voltage', 'v'], ['current', 'A', 'Current', 'a']];
+  const advanced=[];
+  for (const [key, unit, title, cls] of keys) {
+    const v = stats(signal.samples, key);
+    parts.push(`<section class="signal-summary ${cls}" aria-label="${title} statistics"><header><i></i><b>${title}</b><span>Average</span></header><strong>${number(v.mean,unit)}</strong><div class="signal-range"><span><small>Minimum</small>${number(v.min,unit)}</span><span><small>Maximum</small>${number(v.max,unit)}</span></div></section>`);
+    advanced.push(`<tr><th scope="row">${title}</th><td>${number(v.rms,unit)}</td><td>${number(v.max-v.min,unit)}</td></tr>`);
   }
-  strip.innerHTML = parts.join(' ');
+  if(c?.type==='memristor'){
+    const first=signal.samples[0],last=signal.samples.at(-1);
+    parts.push(`<section class="memory-summary"><b>Memory over this run</b><dl><dt>Resistance</dt><dd>${number(first.resistance,'Ω')} → ${number(last.resistance,'Ω')}</dd><dt>Plug opening</dt><dd>${number(first.state*100,'%')} → ${number(last.state*100,'%')}</dd></dl><p>0% = closed · 100% = fully open</p></section>`);
+  }
+  parts.push(`<details class="advanced-stats"><summary>Effective value &amp; ripple</summary><table><thead><tr><th>Signal</th><th>RMS</th><th>Peak to peak</th></tr></thead><tbody>${advanced.join('')}</tbody></table><p>RMS is the effective magnitude. Peak to peak is the difference between the highest and lowest value.</p></details>`);
+  parts.push(`<details class="probe-model"><summary>Simulation context</summary><p>${escape(signal.metadata?.label||'Ripple')} · ${escape(signal.metadata?.window||'Startup')}</p></details>`);
+  strip.innerHTML = parts.join('');
   const eq = signal.kind === 'wire' ? ['Pipe voltage', '<i>v</i> = <i>V</i><sub>node</sub> − <i>V</i><sub>ref</sub>', 'One electrical node'] : equations[c?.type];
   if (eq && signal.metadata?.mode==='ideal') { card.hidden=false; card.textContent=!signal.metadata.reduced?'Ideal components · Finite L/C dynamics retained. No validated ripple-neglected reduction for this circuit; see Model & protection.':signal.metadata.topology==='fullboost'?'Report course reference · Q=CV fixed; capacitor path current alternates with zero cycle mean. Filter ripple and transformer excitation omitted; symmetric overlap sharing.':'Periodic course reference · Q=CV, capacitor i=0 cycle-averaged; filter v=L di/dt ripple omitted; flyback storage and forward reset ramps retained.'; }
   else if (eq) { card.hidden = false; card.innerHTML = `<span class="eq-name">${eq[0]}</span><span class="eq-math">${eq[1]}</span><span class="eq-note">${eq[2]}</span>`; }
@@ -282,6 +299,7 @@ function describe(c) {
   const bits = [];
   if (c.type === 'switch') bits.push(c.pwm ? `PWM ${fmt(c.pwm.frequency / 1000)} kHz · D ${fmt(c.pwm.duty * 100, 1)} %` : `${fmt(c.value)} ms pulse`);
   else if (c.type === 'source') bits.push(c.waveform === 'sine' ? `${fmt(c.value)} V peak · ${fmt(c.frequency ?? 50)} Hz` : `${fmt(c.value)} V`);
+  else if (c.type === 'memristor') bits.push(`Ron ${fmt(c.Ron??100)} Ω · Roff ${fmt(c.value)} Ω · QD ${fmt((c.QD??.001)*1000)} mC · x0 ${fmt(c.x0??.1,2)}`);
   else if (c.type.startsWith('coupled')) {
     bits.push(`${fmt(c.value)} mH`);
     const n = Object.keys(type.ports || {}).length / 2;
@@ -294,11 +312,15 @@ function describe(c) {
 }
 
 /* ---------- refresh on every editor change ---------- */
+// The project name adds a toolbar row; keep the drawing below it on every screen size.
+const canvasTools=$('.canvas-tools'),canvasStage=$('.canvas-area .stage');
+new ResizeObserver(()=>{canvasStage.style.top=(canvasTools.offsetHeight+16)+'px';}).observe(canvasTools);
 let signalKey = '';
 function refresh() {
+  const schematic=E.schematic;if(schematic.kind==='custom'){setTitle(schematic.name);host('title').textContent='';history.replaceState(null,'','#'+schematic.id);}else if(schematic.kind==='example'){setTitle(schematic.name);host('title').textContent='';history.replaceState(null,'','#'+schematic.key);}else{setTitle(schematic.name);history.replaceState(null,'',location.pathname+location.search);}
   const doc = E.document, sel = E.selection, model = E.model;
   const report = window.EditorWaveformReference.create(doc);
-  plotView.querySelector('[value=report]').disabled = !report.available;
+  plotView.querySelector('[value=report]').disabled = !report.available;host('report-availability').hidden=plotView.value!=='report';
   host('report-availability').textContent = report.available ? 'Teaching reference: ideal, periodic full-bridge boost waveforms. This is a plot source, not a simulation mode.' : 'Teaching reference unavailable: '+report.reason;
   if(!report.available && plotView.value==='report'){plotView.value='simulation';E.setPlotOptions({view:'simulation'});}
   const viewNote = host('plot-view-note');
@@ -337,6 +359,7 @@ root.addEventListener('change', e => { if (e.target.closest('#ed-fields')) reque
 /* ---------- phone dock + sheets ---------- */
 function setSheet(name, toggle = true) {
   const next = toggle && root.dataset.sheet === name ? null : name;
+  if(next!=='build'&&$('#ed-pipe').getAttribute('aria-pressed')==='true')escapeKey();
   if (next) root.dataset.sheet = next; else delete root.dataset.sheet;
   if (next !== 'inspect' && !$('#ed-inspector').hidden && phone.matches) $('#ed-inspector-toggle').click();
   if (next === 'build') { work.classList.remove('builder-hidden'); activateConnect(); }
@@ -372,20 +395,20 @@ root.querySelector('.mobile-dock').addEventListener('click', e => {
   }
 });
 $('#ed-play').addEventListener('click', () => requestAnimationFrame(refreshDock));
-phone.addEventListener('change', () => { delete root.dataset.sheet; $('.wave-probe').open=!phone.matches;positionWaveControls();refreshDock(); });
+phone.addEventListener('change', () => { delete root.dataset.sheet; positionWaveControls();refreshDock(); });
 
 /* ---------- start-up circuit: #<preset> in the URL, buck by default ---------- */
 const presetFromHash = () => { const wanted = location.hash.slice(1); return wanted && [...converter.options].some(o => o.value === wanted) ? wanted : null; };
-converter.value = presetFromHash() || 'buck'; fire(converter, 'change');
+converter.value = presetFromHash() || E.resumeSchematicId || 'buck'; fire(converter, 'change');
 window.addEventListener('hashchange', () => { const next = presetFromHash(); if (next && next !== converter.value) { converter.value = next; fire(converter, 'change'); } });
 applyPlotOptions();
 const requestedProbe = new URLSearchParams(location.search).get('probe');
 if (requestedProbe) E.select(requestedProbe);
 setSetup(store.get('panel-setup') === 'shown');
-$('.transport').hidden=store.get('panel-playback') === 'hidden';
 if(store.get('panel-properties') === 'shown' && $('#ed-inspector').hidden) $('#ed-inspector-toggle').click();
 applyPageScroll();
-$('.wave-probe').open=!phone.matches;positionWaveControls();
-if (!phone.matches && !work.classList.contains('builder-hidden')) activateConnect();
+positionWaveControls();
+hostStarted=true;
+// Restoring panel visibility must not arm a drawing tool on page load.
 refresh();
 })();

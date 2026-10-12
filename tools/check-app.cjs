@@ -41,18 +41,27 @@ const server = http.createServer((req, res) => {
   await page.goto(base);
   await idle();
   assert.equal(await page.inputValue('#ed-converter'), 'buck', 'buck is the default circuit');
-  assert.equal(await page.getAttribute('#ed-pipe', 'aria-pressed'), 'true', 'desktop Build starts in Connect');
+  assert.equal(await page.getAttribute('#ed-pipe', 'aria-pressed'), 'false', 'startup is a clean simulation view');
+  assert.equal(await page.locator('[data-connection-target], [data-pipe-target], [data-loose-terminal]').count(),0,'no connection circles at startup');
+  await page.click('[data-host=builder-toggle]');
+  assert.equal(await page.getAttribute('#ed-pipe','aria-pressed'),'true','opening Build enables connections');
+  await page.click('[data-part=pipe]');
+  assert.equal(await page.getAttribute('#ed-pipe','aria-pressed'),'true','Pipe stays armed when already active');
+  assert(await page.locator('[data-connection-target]').count()>0,'Build shows connection targets');
+  await page.click('[data-host=builder-close]');
+  assert.equal(await page.locator('[data-connection-target], [data-pipe-target]').count(),0,'closing Build hides connection targets');
+  await page.click('[data-host=builder-toggle]');
   assert(await page.locator('#ed-pipe').isHidden(), 'redundant Connect button removed from canvas toolbar');
   assert.equal(await page.locator('[data-host=tool-select]').count(), 0, 'redundant Select button removed');
-  assert(await page.locator('.app-head #ed-inspector-toggle').count() || await page.locator('header #ed-inspector-toggle').count(), 'Properties is in the menu bar');
+  assert.equal(await page.locator('.builder #ed-inspector-toggle').count(),1,'Properties is inside Builder');assert.equal(await page.locator('.builder #ed-arrange').count(),1,'Auto arrange is inside Builder');
   assert.equal(await page.locator('.setup-panel #ed-magnetic-mode').count(),1,'simulation appearance is in Simulation, not View');
   assert(await page.locator('[data-host=report-availability]').textContent(),'disabled teaching reference has an explanation');
   assert(await page.locator('.waveforms > header').evaluate(n=>n.clientHeight<=40),'waveform headline stays on one line');
   assert.equal(await page.locator('.waveforms > header .plot-controls').count(),1,'waveform controls use empty header space on desktop');
   assert(await page.evaluate(() => !!circuitEditor.model), 'buck simulates');
   assert.equal(await page.evaluate(() => circuitEditor.model.metadata.mode), 'ripple', 'fresh app defaults to Ripple');
-  assert.match(await page.textContent('#ed-model-leakage'), /finite coupling/);
-  assert.match(await page.textContent('[data-host=levels]'), /V̄/, 'level strip shows statistics');
+  assert.match(await page.textContent('#ed-model-leakage'), /Experimental/);
+  assert.match(await page.textContent('[data-host=levels]'), /Average/, 'level strip shows statistics');
   assert.match(await page.textContent('[data-host=build]'), /^Simulator: cwas \w+/, 'build stamp shown in Help');
 
   // hash selects a preset, also without reload
@@ -62,7 +71,7 @@ const server = http.createServer((req, res) => {
   assert(await page.evaluate(() => circuitEditor.document.components.some(c => c.type === 'coupled3')));
   await page.click('[data-host=setup-toggle]');
   assert(await page.locator('.builder').isVisible() && await page.locator('.setup-panel').isVisible(), 'builder and simulation setup coexist');
-  assert(await page.locator('.setup-visual').getAttribute('open')!==null,'Simulation appearance is open by default');
+  assert(await page.locator('.setup-visual').isVisible(),'Simulation appearance is flat');
   const panelHeights=await page.evaluate(()=>{const height=s=>document.querySelector(s).getBoundingClientRect().height;return {main:height('.main'),builder:height('.builder'),setup:height('.setup-panel')};});
   assert(Math.abs(panelHeights.main-panelHeights.builder)<2&&Math.abs(panelHeights.main-panelHeights.setup)<2,'side panels use full schematic/playback height');
   assert.equal(await page.locator('#ed-fit svg').count(),1,'schematic reset uses a home icon');
@@ -95,14 +104,11 @@ const server = http.createServer((req, res) => {
   assert.equal(await page.evaluate(()=>circuitEditor.document.components.find(c=>c.id==='Q1').pwm.frequency),2000,'PWM timing updated');
   await page.click('#ed-undo');
   await page.screenshot({ path: path.join(out, 'app-panels-desktop.png') });
-  await page.locator('.model-details > summary').click();
-  assert.equal(await page.locator('.model-details').evaluate(n => getComputedStyle(n).position), 'static', 'protection expands inline, not as an overlay');
+  assert.equal(await page.locator('.setup-panel details').count(),0,'Simulation setup has no disclosure menus');
+  assert(!(await page.locator('#ed-model-note').isVisible()),'explanations stay in info controls');
   await page.click('[data-host=setup-close]');
   await page.locator('.app-head summary').filter({hasText:/^View$/}).click();
-  await page.uncheck('[data-panel=playback]');
-  assert(await page.locator('.transport').isHidden(), 'View customizes playback visibility');
-  assert.equal(await page.evaluate(() => localStorage.getItem('inertance-panel-playback')), 'hidden', 'panel preference persists');
-  await page.check('[data-panel=playback]');
+  assert.equal(await page.locator('[data-panel=playback]').count(),0,'Playback panel removed');assert(await page.locator('.simulation-controls').isVisible(),'compact essential controls remain visible');
   await page.locator('.app-head summary').filter({hasText:/^View$/}).click();
 
   // canvas fills its stage and refits when the builder hides
@@ -176,7 +182,7 @@ const server = http.createServer((req, res) => {
   assert(leftPanels.waveTop>=leftPanels.headerBottom-1,'waveform probe information does not overlap sticky header');
   await page.screenshot({path:path.join(out,'app-wave-sidebar-scroll.png')});
   await page.evaluate(() => window.scrollTo(0,document.documentElement.scrollHeight));
-  assert(await page.locator('.transport').evaluate(n => n.getBoundingClientRect().bottom < 0), 'playback scrolls away with schematic');
+  assert(await page.locator('.simulation-controls').evaluate(n => n.getBoundingClientRect().bottom < 0), 'playback scrolls away with schematic');
   assert(await page.locator('.canvas-area').evaluate(n => n.getBoundingClientRect().bottom < 0), 'schematic scrolls away to make room for plots');
   await page.evaluate(() => window.scrollTo(0,0));
   await page.selectOption('[data-host=plot-columns]', '3');
@@ -200,16 +206,16 @@ const server = http.createServer((req, res) => {
   assert(await page.locator('#ed-inspector').isHidden());
 
   // playback: speed select drives the editor; continuous loop wraps at the end
-  await page.selectOption('[data-host=speed]', '100');
+  await page.selectOption('[data-host=speed]','100',{force:true});
   assert.equal(await page.textContent('#ed-speed-label'), '10×');
   await page.click('#ed-play');
   await page.waitForTimeout(2200);
   const looped = await page.evaluate(() => ({ playing: circuitEditor.playing, t: circuitEditor.time, T: circuitEditor.model.duration }));
   assert(looped.playing && looped.t < looped.T, 'continuous loop keeps playing past the end ' + JSON.stringify(looped));
   await page.click('#ed-play');
-  await page.selectOption('[data-host=loop]', '0');
+  await page.selectOption('[data-host=loop]','0',{force:true});
   assert.equal(await page.evaluate(() => circuitEditor.loop), false);
-  assert.equal(await page.inputValue('[data-host=loop-menu]'), '0', 'loop controls stay in sync');
+  assert.equal(await page.evaluate(()=>circuitEditor.loop),false,'viewing controls set the loop');
   await page.click('#ed-reset');await page.click('#ed-play');await page.waitForTimeout(80);
   await page.locator('#ed-play').dispatchEvent('pointerdown',{button:0,pointerType:'mouse'});
   assert.equal(await page.evaluate(()=>circuitEditor.playing),false,'Pause stops on press, before click/release');
@@ -260,6 +266,12 @@ const server = http.createServer((req, res) => {
   assert(await page.locator('.builder').isVisible());
   assert.equal(await page.getAttribute('#ed-pipe', 'aria-pressed'), 'true', 'phone Build activates Connect');
   await page.screenshot({ path: path.join(out, 'app-phone-build.png') });
+  await page.click('[data-part=pipe]');
+  assert(await page.locator('.builder').isHidden(),'phone Pipe tool gives the canvas back');
+  assert.equal(await page.getAttribute('#ed-pipe','aria-pressed'),'true','phone Pipe remains ready to draw');
+  await page.click('[data-dock=canvas]');
+  assert.equal(await page.locator('[data-connection-target], [data-pipe-target]').count(),0,'phone Canvas hides connection targets');
+  await page.click('[data-dock=build]');
   await page.click('[data-part=resistor]');
   assert(await page.locator('.builder').isHidden(), 'choosing a part closes the sheet');
   await page.click('[data-dock=canvas]');
@@ -267,7 +279,7 @@ const server = http.createServer((req, res) => {
   await page.screenshot({ path: path.join(out, 'app-phone.png'), fullPage: true });
 
   // Report reference: formulas annotate physical levels, without changing physics.
-  await page.selectOption('#ed-converter', 'fullboost'); await idle();
+  await page.selectOption('#ed-converter','fullboost',{force:true}); await idle();
   const documentBeforeReference = await page.evaluate(() => JSON.stringify(circuitEditor.document));
   const physicsBeforeReference = await page.evaluate(() => circuitEditor.model.metadata.mode);
   await page.selectOption('[data-host=signal]', 'T1');
@@ -292,7 +304,7 @@ const server = http.createServer((req, res) => {
   assert.equal(await page.locator('.symbolic-level:not(.derived-level)').count(), 0, 'simulation view removes ideal report levels');
   assert(await page.locator('.derived-level math').count() >= 30, 'Ripple expressions available for every component and winding');
   await page.selectOption('[data-host=plot-scope]', 'selected');
-  await page.selectOption('#ed-converter', 'buck'); await idle();
+  await page.selectOption('#ed-converter','buck',{force:true}); await idle();
   await page.selectOption('[data-host=signal]', 'L1');
   await page.locator('.waveform-expressions summary').first().click();
   await page.screenshot({ path: path.join(out, 'app-expressions-desktop.png') });

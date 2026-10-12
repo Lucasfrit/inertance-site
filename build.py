@@ -108,6 +108,7 @@ HEAD = """<!doctype html>
 """ % SHIM
 
 FOOT = """
+<p><a href="../source/">Software, release source &amp; licences</a> · <a href="../changelog/">Changelog</a></p>
 <p><a href="../about/">About, contact &amp; privacy</a></p>
 <div class="caveat">
   <strong>Where this analogy lies to you.</strong>

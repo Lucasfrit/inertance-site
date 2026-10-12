@@ -1,0 +1,29 @@
+[
+  {
+    "id": "buffer",
+    "title": "Capacitor buffer",
+    "category": "Storage",
+    "description": "See how a capacitor supports a switched load.",
+    "file": "circuits/buffer.json",
+    "author": "Inertance built-in example",
+    "origin": "Seed example \u00b7 not a community submission"
+  },
+  {
+    "id": "freewheel",
+    "title": "Freewheel diode",
+    "category": "Switching",
+    "description": "Watch inductor current flow through a return diode.",
+    "file": "circuits/freewheel.json",
+    "author": "Inertance built-in example",
+    "origin": "Seed example \u00b7 not a community submission"
+  },
+  {
+    "id": "buck",
+    "title": "Buck converter",
+    "category": "Converters",
+    "description": "Explore a 12 V supply switching at 50% duty.",
+    "file": "circuits/buck.json",
+    "author": "Inertance built-in example",
+    "origin": "Seed example \u00b7 not a community submission"
+  }
+]

@@ -12,6 +12,7 @@ and stamps the page with the simulator commit it came from. See docs/APP.md and
 ../cwas/docs/WEBSITE-WORKFLOW.md.
 """
 from datetime import date
+import os
 from pathlib import Path
 import json
 import re
@@ -37,12 +38,22 @@ if missing:
     sys.exit(f"simulator source not found in {SIM}: {', '.join(missing)}")
 
 shell = (SRC / "shell.html").read_text()
-css = (SRC / "app.css").read_text()
-host = (SRC / "host.js").read_text()
+css = (SRC / "app.css").read_text() + "\n" + (SRC / "community.css").read_text()
+host = (SRC / "host.js").read_text() + "\n" + (SRC / "community.js").read_text()
 analytics = json.loads((SRC / "analytics" / "config.json").read_text())
 website = analytics.get("website", "")
 if not isinstance(website, str) or (website and not re.fullmatch(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}", website)):
     sys.exit("analytics/config.json: website must be an Umami website UUID or empty to disable collection")
+posthog = analytics.get("posthog", {})
+if not isinstance(posthog, dict) or set(posthog) - {"token", "host"}:
+    sys.exit("analytics/config.json: posthog accepts only public token and host fields")
+token = posthog.get("token", "")
+collector = posthog.get("host", "https://eu.i.posthog.com")
+if not isinstance(token, str) or (token and not re.fullmatch(r"phc_[A-Za-z0-9]{20,128}", token)):
+    sys.exit("analytics/config.json: PostHog token must be a public phc_ project token or empty; never use a private API key")
+if collector not in ("https://eu.i.posthog.com", "https://us.i.posthog.com"):
+    sys.exit("analytics/config.json: PostHog host must be an official EU or US ingestion host")
+public_analytics = {"website": website, "posthog": {"token": token, "host": collector}}
 modules = "\n".join(f"/* ---- {m} ---- */\n" + (SIM / m).read_text() for m in EDITOR_MODULES)
 
 # Contract check: every id the editor looks up must exist in the shell exactly once.
@@ -52,7 +63,7 @@ editor_ids |= set(re.findall(r"get\('((?:ed-)[a-z0-9-]+)'\)", (SIM / "editor-imp
 shell_ids = re.findall(r'\bid="(ed-[a-z0-9-]+)"', shell)
 absent = sorted(editor_ids - set(shell_ids))
 dupes = sorted({i for i in shell_ids if shell_ids.count(i) > 1})
-created_by_editor = {"ed-magnetic"}  # built inside #ed-fields at run time, looked up defensively
+created_by_editor = {"ed-magnetic", "ed-mem-live"}  # built inside #ed-fields at run time, looked up defensively
 absent = [i for i in absent if i not in created_by_editor]
 if absent or dupes:
     sys.exit(f"shell/editor id contract broken. missing: {absent} duplicated: {dupes}")
@@ -79,7 +90,15 @@ def git(*args):
 commit = git("rev-parse", "--short", "HEAD") or "unknown"
 tracked = [f"simulator/{m}" for m in EDITOR_MODULES] + ["simulator/editor-modules.json"]
 dirty = bool(git("status", "--porcelain", "--", *tracked))
-stamp = f"cwas {commit}{' + uncommitted changes' if dirty else ''} · built {date.today().isoformat()}"
+release_input = HERE / 'release-input.json'
+if release_input.exists() and not (SIM.parent / '.git').exists():
+    frozen = json.loads(release_input.read_text())
+    commit = frozen['simulator_revision'][:7]
+    dirty = False
+build_date = os.environ.get('INERTANCE_BUILD_DATE', date.today().isoformat())
+if release_input.exists() and not (SIM.parent / '.git').exists():
+    build_date = frozen['build_date']
+stamp = f"cwas {commit}{' + uncommitted changes' if dirty else ''} · built {build_date}"
 
 for s in (modules, host):
     if "</script" in s.lower():
@@ -128,7 +147,15 @@ analytics_out = HERE / "assets" / "analytics"
 analytics_out.mkdir(exist_ok=True)
 for name in ("analytics.js", "analytics.css"):
     shutil.copyfile(SRC / "analytics" / name, analytics_out / name)
-(analytics_out / "config.js").write_text("window.InertanceAnalyticsConfig = Object.freeze(" + json.dumps({"website": website}) + ");\n")
+(analytics_out / "config.js").write_text("window.InertanceAnalyticsConfig = Object.freeze(" + json.dumps(public_analytics) + ");\n")
 print(f"built {OUT / 'index.html'}  ({len(page):,} bytes, {len(EDITOR_MODULES)} editor modules, "
       f"{len(editor_ids)} ids and {len(host_members)} API members checked)")
 print(f"simulator: {stamp}")
+
+
+# Static gallery seeds only; no old editor snapshot or browser-local private records.
+community_source = SRC / "community"
+community_output = OUT / "community"
+community_output.mkdir(exist_ok=True)
+shutil.copyfile(community_source / "gallery.json", community_output / "gallery.json")
+shutil.copytree(community_source / "circuits", community_output / "circuits", dirs_exist_ok=True)

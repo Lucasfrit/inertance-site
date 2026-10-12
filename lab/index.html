@@ -125,6 +125,10 @@ a{color:var(--accent)}
 
 
 <script>
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+ * Copyright (C) 2026 Lucas Wybrandt — copyrightable contributions.
+ * Inertance; see LICENSE and SOFTWARE-NOTICE.md. No warranty.
+ */
 /* SI-unit, topology-specific switched state model. No visual gains enter this solver. */
 (function(g){
 const names={buck:'Buck',boost:'Boost',inverting:'Buck–boost · inverting',noninverting:'Buck–boost · two switches',flyback:'Flyback',half:'Half bridge · buck type',fullbuck:'Full bridge · buck type',fullboost:'Full bridge · boost type'};
@@ -186,6 +190,10 @@ function simulate(options={}){
 if(typeof module!=='undefined')module.exports={simulate,names,defaults};else g.CircuitModel={simulate,names,defaults};
 })(globalThis);
 
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+ * Copyright (C) 2026 Lucas Wybrandt — copyrightable contributions.
+ * Inertance; see LICENSE and SOFTWARE-NOTICE.md. No warranty.
+ */
 (()=>{
 const root=document.getElementById('circuit-lab'),$=s=>root.querySelector(s),NS='http://www.w3.org/2000/svg';
 const el=(tag,a={},parent)=>{const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(a))n.setAttribute(k,v);if(parent)parent.appendChild(n);return n};
@@ -275,6 +283,10 @@ const sub=e=>e.replaceAll('IL,min',f(lo)).replaceAll('IL,max',f(hi)).replaceAll(
 return `CCM guide, losses neglected: min ≈ ${e1} = ${sub(e1)} = ${f(min)} ${c.unit==='mV'?'V':c.unit}; max ≈ ${e2} = ${sub(e2)} = ${f(max)} ${c.unit==='mV'?'V':c.unit}\nĪL = ${f(avg)} A; ΔIL ≈ ${type==='buck'||bridgeBuck?'(Vdrive−Vₒ)':'Vᵢ'}·D/(Lf) = ${f(rise)}×${f(D)}/(${f(p.L)}×${f(p.f)}) = ${f(delta)} A. Simulated extrema may differ.`;
 }
 
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+ * Copyright (C) 2026 Lucas Wybrandt — copyrightable contributions.
+ * Inertance; see LICENSE and SOFTWARE-NOTICE.md. No warranty.
+ */
 // Diagram paths are separate from the electrical state model.
 function buildDiagram(){
  powerLinks.length=0;pipes.length=0;caps.length=0;rotors.length=0;switches.length=0;diodes.length=0;gears.length=0;valueLabels.length=0;$('#cl-defs').replaceChildren();$('#cl-pipes').replaceChildren();parts.replaceChildren();labels.replaceChildren();
@@ -366,6 +378,10 @@ const ext=d3.extent(data.flatMap(v=>[...(showSim?[v.a]:[]),...(showRef?[v.b]:[])
 for(let k=0;k<4;k++)svg.append('line').attr('x1',x((k+model.p.duty)/model.p.f*1000)).attr('x2',x((k+model.p.duty)/model.p.f*1000)).attr('y1',m.t).attr('y2',h-m.b).attr('stroke','var(--border)').attr('stroke-dasharray','3 4');const clip=svg.append('defs').append('clipPath').attr('id','cl-clip-'+index).append('rect').attr('x',m.l).attr('y',m.t).attr('height',h-m.t-m.b);for(const[field,color,visible]of[['b','var(--viz-series-1)',showRef],['a','var(--foreground)',showSim]])if(visible){const d=d3.line().x(v=>x(v.t*1000)).y(v=>y(v[field]))(data);svg.append('path').attr('d',d).attr('fill','none').attr('stroke',color).attr('stroke-width',1.6).attr('opacity',.16);svg.append('path').attr('d',d).attr('fill','none').attr('stroke',color).attr('stroke-width',1.6).attr('opacity',field==='a'?.65:1).attr('clip-path',`url(#cl-clip-${index})`);}
 const guide=svg.append('line').attr('data-chart-hover-guide','').attr('y1',m.t).attr('y2',h-m.b).attr('stroke','var(--foreground)').attr('stroke-dasharray','2 2').style('display','none');const markers=['b','a'].map(field=>svg.append('circle').attr('data-chart-hover-marker',field).attr('r',3).attr('fill',field==='b'?'var(--viz-series-1)':'var(--foreground)').style('display','none'));const cursor=svg.append('line').attr('y1',m.t).attr('y2',h-m.b).attr('stroke','var(--foreground)').attr('stroke-width',1);svg.append('rect').attr('x',m.l).attr('y',m.t).attr('width',w-m.l-m.r).attr('height',h-m.t-m.b).attr('fill','transparent').attr('data-chart-hit','').attr('data-chart-hover-overlay','cross-series').on('pointerleave',()=>{guide.style('display','none');markers.forEach(m=>m.style('display','none'));$('.tip').hidden=true;}).on('pointermove',function(event){const px=Math.max(x(0),Math.min(x(model.duration*1000),d3.pointer(event,this)[0])),time=x.invert(px)/1000,v=model.at(time),ref=reference(v);guide.attr('x1',px).attr('x2',px).style('display',null);markers.forEach((m,j)=>m.attr('cx',px).attr('cy',y(convert(j?v[key]:ref[key]))).style('display',(j?showSim:showRef)?null:'none'));const tip=$('.tip'),r=root.getBoundingClientRect();tip.hidden=false;tip.style.left=Math.max(0,Math.min(root.clientWidth-220,event.clientX-r.left))+'px';tip.style.top=(event.clientY-r.top+15)+'px';tip.textContent=(time*1000).toFixed(3)+' ms'+(showRef?' · Textbook '+convert(ref[key]).toFixed(3)+' '+u:'')+(showSim?' · Simulated '+convert(v[key]).toFixed(3)+' '+u:'');if(event.buttons){playing=false;t=Math.max(0,Math.min(model.duration,x.invert(d3.pointer(event,this)[0])/1000));render();}}).on('pointerdown',function(event){playing=false;t=Math.max(0,Math.min(model.duration,x.invert(d3.pointer(event,this)[0])/1000));render();});addStatistics(svg,y,w,h,m,key,u,convert);const expressionGuide=document.createElement('div');expressionGuide.className='calculation text-small';expressionGuide.style.whiteSpace='pre-line';const calc=document.createElement('details');calc.className='calculation text-small';const summary=document.createElement('summary');summary.textContent='Values & calculations · now, min, mean, max';calc.append(summary,expressionGuide);const formulaNode=document.createElement('div');formulaNode.style.whiteSpace='pre-line';calc.append(formulaNode);calc.hidden=!$('#cl-calcs').checked;box.append(calc);charts.push({key,title,unit:u,convert,heading,x,clip,cursor,mean,zoom,formulaNode,calc,guide:expressionGuide});});}
 
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+ * Copyright (C) 2026 Lucas Wybrandt — copyrightable contributions.
+ * Inertance; see LICENSE and SOFTWARE-NOTICE.md. No warranty.
+ */
 function render(){const v=model.at(t);drawWater(v);$('#cl-input-note').textContent=model.p.rs===0?'Cᵢ is held at the source voltage: dVᵢ/dt = 0, so i_Cᵢ = 0.':`Input capacitor: ${Math.abs(v.ici)<1e-5?'momentarily steady':v.ici>0?'charging':'discharging'} · i_Cᵢ = ${v.ici.toFixed(3)} A`;$('#cl-play').textContent=playing?'Pause':'Play';$('#cl-time').textContent=`${(t*1000).toFixed(3)} ms`;$('#cl-scrub').value=t/model.duration*1000;for(const c of charts){const x=c.x(t*1000);c.clip.attr('width',Math.max(0,x-64));c.cursor.attr('x1',x).attr('x2',x);c.heading.textContent=`${c.title} · ${c.convert(v[c.key]).toFixed(3)} ${c.unit}${c.zoom?' from '+c.mean.toFixed(3)+' V':''}`;c.guide.textContent=envelopeExpression(c);c.guide.hidden=!$('#cl-calcs').checked;c.formulaNode.textContent='Now: '+formula(c.key,v)+'\n\n'+statisticsCalculation(c);c.calc.hidden=!$('#cl-calcs').checked;}}
 function rebuild(){const params={type:$('#cl-type').value,losses:$('#cl-loss').checked,rs:+$('#cl-feed').value};for(const[k,scale]of[['vs',1],['L',.001],['Ci',.000001],['C1',.000001],['C2',.000001],['Co',.000001],['R',1],['f',1000],['n',1],['duty',.01],['rq',.001],['rL',.001],['vd',1],['esr',.001]]){const input=$('#cl-'+k);if(!input.checkValidity()){input.reportValidity();return;}params[k]=+input.value*scale;}try{const candidate=CircuitModel.simulate(params);model=candidate;$('#cl-error').hidden=true;}catch(e){$('#cl-error').textContent=e.message+' Previous circuit retained.';$('#cl-error').hidden=false;return;}t=0;turns=0;pressureMax=Math.ceil(Math.max(model.p.vs,...model.samples.map(v=>Math.max(Math.abs(v.vo),Math.abs(v.vp)*model.p.n)))/12)*12;pressureMin=(model.sign<0||model.bridge||model.p.type==='flyback')?-pressureMax:0;root.querySelectorAll('.split-control').forEach(n=>n.hidden=model.p.type!=='half');buildDiagram();makeCharts();$('#cl-transfer').textContent=transfer();$('#cl-regime').textContent=model.regime+(model.regime==='DCM'?' · textbook CCM reference no longer applies':'');$('#cl-n').disabled=!['flyback','half','fullbuck','fullboost'].includes(model.p.type);render();$('#cl-announce').textContent=CircuitModel.names[model.p.type]+' recalculated';}
 for(const[k,name]of Object.entries(CircuitModel.names)){const o=document.createElement('option');o.value=k;o.textContent=name;$('#cl-type').append(o);}
@@ -375,6 +391,7 @@ rebuild();let width=root.clientWidth;new ResizeObserver(()=>{if(root.clientWidth
 
 </script>
 
+<p><a href="../source/">Software, release source &amp; licences</a> · <a href="../changelog/">Changelog</a></p>
 <p><a href="../about/">About, contact &amp; privacy</a></p>
 <div class="caveat">
   <strong>Where this analogy lies to you.</strong>

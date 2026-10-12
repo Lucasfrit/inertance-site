@@ -1,1 +1,1 @@
-window.InertanceAnalyticsConfig = Object.freeze({"website": "811e834e-5f0f-433b-a8a5-62321a08c80a"});
+window.InertanceAnalyticsConfig = Object.freeze({"website": "811e834e-5f0f-433b-a8a5-62321a08c80a", "posthog": {"token": "phc_A6NzVJuKEL2V7qqTZb6u9CBKUvMsafCdVhqd2Zfjkzfm", "host": "https://eu.i.posthog.com"}});
