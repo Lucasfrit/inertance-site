@@ -1,0 +1,41 @@
+{
+  "release_date": "2026-10-12",
+  "simulator_revision": "db15e574da6da866746ae7c9dd0be20c0041a597",
+  "website_input_revision": "a5ea9f24f9f00b770cd953ebec48e46535e05746",
+  "source_packages": {
+    "07": {
+      "archive": "inertance-2026-10-07-source.zip",
+      "sha256": "8a97d2559c05891f1585e2373e4c0adb7a8273d862b5fb3feb8814178b225060",
+      "simulator_revision": "d0bba0c797dfcdaf039ac66d5c15da4606dc9a00",
+      "website_input_revision": "7ad84205c47acb189dd274dab5422331114af576",
+      "clean_rebuild": "byte-for-byte PASS"
+    },
+    "12": {
+      "archive": "inertance-2026-10-12-source.zip",
+      "sha256": "55a3415e73837af8cf169965f0e37e6fbac4b8519536853c65558df6208c38c7",
+      "simulator_revision": "db15e574da6da866746ae7c9dd0be20c0041a597",
+      "website_input_revision": "a5ea9f24f9f00b770cd953ebec48e46535e05746",
+      "clean_rebuild": "byte-for-byte PASS"
+    }
+  },
+  "validation": {
+    "numerical_storage_suites": 18,
+    "development_browser_suites": 3,
+    "site_both_shell_suites": 10,
+    "source_package_checks": "PASS",
+    "preview_sizes": [
+      1440,
+      390
+    ],
+    "analytics": "intercepted tests; live checks DNT",
+    "feedback": "intercepted tests; activated recipient configuration retained"
+  },
+  "deployment_revision_authority": "GitHub Pages deployment headSha; mirror /release.json upstream_revision identifies the primary deployment. This record does not self-embed its future containing commit.",
+  "limitations": [
+    "Community drafts/review remain browser-local",
+    "native popup positioning is OS-controlled",
+    "bounded import/leakage support and half-bridge settling",
+    "illustrative educational memory/flow physics",
+    "DTU DNS access to inertance.org remains unresolved"
+  ]
+}
