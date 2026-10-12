@@ -1,3 +1,29 @@
+# Current release — 12 October 2026
+
+Runtime cwas db15e574da6da866746ae7c9dd0be20c0041a597; website build inputs
+ a5ea9f24f9f00b770cd953ebec48e46535e05746. Initial primary publication
+babdd8af710c8a87b365d3bffe3f411c38fb8d6f passed Pages run
+[38293230208](https://github.com/Lucasfrit/inertance-site/actions/runs/38293230208).
+Mirror cb60f37285313c6857e8979f5ed59d2b326b893d passed workflow run
+[38293351622](https://github.com/Lucasfrit/hydraulicanalogy-site/actions/runs/38293351622).
+Both domains serve the three native memory circuits, custom schematic workflow,
+latest editor/flow controls, integrated local Community, activated private
+Feedback and optional consent-based PostHog/Umami. HTTPS enforcement remains on.
+No domain/DNS changes were needed. DTU access remains a separate issue below.
+
+Full release validation: 31 suites (18 numerical/storage, 3 development browser,
+10 site/both-shell), plus clean source reconstruction and licence/link checks.
+Both domains' unauthenticated source ZIPs, notices and gallery were compared to
+the expected bytes. /source/release.json separates simulator/build-input/package
+identity; final deployment revisions come from Pages and the mirror's /release.json.
+Use SOURCE_REV=db15e57 for live checks and LIVE_OUT to keep domain screenshots
+separate. Notices served as downloads are checked through browser fetch.
+
+Software remains AGPL-3.0-or-later; only the named teaching guide has additional
+CC BY-SA 4.0 scope. Full d3 transitive notices and historical/current reproducible
+source archives are available from /source/. Community drafts/reviews stay local;
+no synthetic production analytics events or test feedback emails are sent.
+
 # Hosting, HTTPS and publishing runbook
 
 Verified 7 October 2026. This is the current configuration; the release history

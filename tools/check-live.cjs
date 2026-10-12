@@ -45,7 +45,7 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     await page.waitForFunction(() => circuitEditor.time > 0);
     await page.click('#ed-play');
     assert(await page.evaluate(() => Number.isFinite(circuitEditor.sample.state.currents.V1)));
-    const out = path.join(__dirname, 'out'); fs.mkdirSync(out, { recursive: true });
+    const out = process.env.LIVE_OUT || path.join(__dirname, 'out'); fs.mkdirSync(out, { recursive: true });
     await page.screenshot({ path: path.join(out, 'live-desktop.png') });
     await page.click('[data-host=theme]');
     await page.screenshot({ path: path.join(out, 'live-desktop-theme.png') });
@@ -90,7 +90,7 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
       }, name); assert(verified, name + ' unauthenticated source hash');
     }
     for (const path of ['/LICENSE', '/SOFTWARE-NOTICE.md', '/CONTENT-LICENSE.md', '/CONTRIBUTING.md', '/THIRD-PARTY-NOTICES.md', '/assets/vendor/d3.BUNDLE-NOTICES.txt', '/changelog/']) {
-      assert.equal((await page.goto(origin + path)).status(), 200, path);
+      assert.equal(await page.evaluate(async path => (await fetch(path)).status, path), 200, path);
     }
     const sitemap = await page.goto(origin + '/sitemap.xml');
     assert.equal(sitemap.status(), 200);
