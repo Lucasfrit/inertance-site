@@ -1,7 +1,7 @@
 {
-  "release_date": "2026-10-12",
-  "simulator_revision": "db15e574da6da866746ae7c9dd0be20c0041a597",
-  "website_input_revision": "a5ea9f24f9f00b770cd953ebec48e46535e05746",
+  "release_date": "2026-10-28",
+  "simulator_revision": "ce9d800b0f30c59944b8a3c472a2f8d62452214d",
+  "website_input_revision": "1781bbe63343c281dfb5fbe3159f3f2c5eb95a9f",
   "source_packages": {
     "07": {
       "archive": "inertance-2026-10-07-source.zip",
@@ -16,12 +16,19 @@
       "simulator_revision": "db15e574da6da866746ae7c9dd0be20c0041a597",
       "website_input_revision": "a5ea9f24f9f00b770cd953ebec48e46535e05746",
       "clean_rebuild": "byte-for-byte PASS"
+    },
+    "28": {
+      "archive": "inertance-2026-10-28-source.zip",
+      "sha256": "a8f73a144d92ea7309a608ee21753502059f005e61eff3e614daf5bd6fa250c0",
+      "simulator_revision": "ce9d800b0f30c59944b8a3c472a2f8d62452214d",
+      "website_input_revision": "1781bbe63343c281dfb5fbe3159f3f2c5eb95a9f",
+      "clean_rebuild": "byte-for-byte PASS"
     }
   },
   "validation": {
-    "numerical_storage_suites": 18,
+    "numerical_storage_suites": 19,
     "development_browser_suites": 3,
-    "site_both_shell_suites": 10,
+    "site_both_shell_suites": 12,
     "source_package_checks": "PASS",
     "preview_sizes": [
       1440,
@@ -36,6 +43,7 @@
     "native popup positioning is OS-controlled",
     "bounded import/leakage support and half-bridge settling",
     "illustrative educational memory/flow physics",
-    "DTU DNS access to inertance.org remains unresolved"
+    "DTU DNS access to inertance.org remains unresolved",
+    "Differential rim represents shared energy; leakage energy is additional; extreme drawn gear sizes are compressed"
   ]
 }
