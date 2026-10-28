@@ -5,3 +5,12 @@
 - Native educational memory equations: [Strukov et al. 2008](https://www.nature.com/articles/nature06932), [2009 correction](https://www.nature.com/articles/nature08166), [Biolek et al. 2009](https://www.radioeng.cz/fulltexts/2009/09_02_210_214.pdf). Papers/figures are not redistributed. Native mechanics adapt the Inertance demo at cwas 3e58764; native implicit network integration differs from the separate demo solver.
 - Converter examples use established topologies, with teaching layout references to DTU 34652 Section 2 pp. 2/9/15, Section 3 pp. 4/9/23/29 and full-bridge-buck slide 3. No course PDFs or slides are bundled. Exact third-party figure/author clearance is not established; these layouts are excluded from the additional CC content grant. Inertance is independent and not endorsed by DTU.
 - Umami, PostHog and FormSubmit are external services, not vendored SDK code. Their marks and service software are not claimed as Inertance property.
+
+
+## Differential flywheel design — 28 October 2026
+
+The native two-winding mechanism follows Lucas Wybrandt's Claude-assisted
+differential-transformer design, private source revision
+4090b5a29514363bd387dfe5b431ddec40b013b8. Integrated and reviewed with the existing
+native electrical solver; its AGPL-3.0-or-later source notices are retained.
+The drawing and gear tooth contact are illustrative, not physical validation.

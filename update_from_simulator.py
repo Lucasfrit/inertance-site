@@ -41,6 +41,7 @@ SIM_CHECKS = [
     "check-editor-general-ideal.cjs",
     "check-editor-fullboost-ideal.cjs",
     "check-editor-coupled.cjs",
+    "check-editor-differential.cjs",
     "check-editor-rc.cjs",
     "check-editor-rlc.cjs",
     "check-editor-layout.cjs",   # also rewrites simulator/editor-layout-report.json
@@ -134,6 +135,7 @@ def main():
         print("  skip  tools/check-app.cjs (--quick)")
     else:
         run(["node", "tools/check-app.cjs"], SITE, "tools/check-app.cjs")
+        run(["node", str(SIM / "check-editor-differential-browser.cjs")], SITE, "check-editor-differential-browser.cjs")
         run(["node", str(SIM / "check-editor-memristor-browser.cjs")], SITE, "check-editor-memristor-browser.cjs (both shells)")
         run(["node", "tools/check-modes.cjs"], SITE, "tools/check-modes.cjs")
         run(["node", "tools/check-analytics.cjs"], SITE, "tools/check-analytics.cjs (intercepted collector; no public events)")
@@ -141,6 +143,7 @@ def main():
         run(["node", str(SIM / "check-editor-example-layouts-browser.cjs")], SITE, "check-editor-example-layouts-browser.cjs (both shells)")
         run(["node", str(SIM / "check-editor-schematics-browser.cjs")], SITE, "check-editor-schematics-browser.cjs (both shells)")
         run(["node", str(SIM / "check-editor-followup-browser.cjs")], SITE, "check-editor-followup-browser.cjs (both shells)")
+        run(["node", str(SIM / "check-editor-mode-history-browser.cjs")], SITE, "check-editor-mode-history-browser.cjs (both shells)")
 
     if not args.quick:
         run(["node", str(SIM / "check-editor-oct12-browser.cjs")], SITE, "check-editor-oct12-browser.cjs")

@@ -65,6 +65,15 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     await page.click('[data-dock=simulation]');
     assert(await page.locator('#ed-model-ripple').isVisible());
     await page.screenshot({ path: path.join(out, 'live-phone.png'), fullPage: true });
+    await page.selectOption('#ed-converter', 'flyback'); await idle();
+    await page.evaluate(() => circuitEditor.select('T1'));
+    assert.equal(await page.locator('#ed-canvas [data-differential]').count(), 1);
+    assert.equal(await page.locator('[data-differential-close]').count(), 1);
+    const phase = async value => page.evaluate(value => { const n=document.querySelector('#ed-scrub'); n.value=value; n.dispatchEvent(new Event('input')); return {...document.querySelector('#ed-canvas [data-differential]').dataset}; },value);
+    const deliveryA=await phase(9650),deliveryB=await phase(9660);
+    assert(Math.abs(+deliveryB.primary-+deliveryA.primary)<1e-9);
+    assert(Math.abs(+deliveryB.carrier-+deliveryA.carrier)>1e-3);
+    assert(Math.abs(+deliveryB.secondary-+deliveryA.secondary-2*(+deliveryB.carrier-+deliveryA.carrier))<1e-8);
     const demo = await page.goto(origin + '/lab/');
     assert.equal(demo.status(), 200);
     await page.waitForFunction(() => typeof d3 !== 'undefined');
@@ -79,7 +88,7 @@ const { chromium } = require(process.env.PLAYWRIGHT || path.join(process.env.HOM
     assert.deepEqual([...scriptHosts], [origin], 'all runtime JavaScript comes from our own site');
     const source = await page.goto(origin + '/source/'); assert.equal(source.status(), 200);
     assert.match(await page.textContent('main'), /AGPL-3.0-or-later/);
-    for (const day of ['07', '12']) {
+    for (const day of ['07', '12', '28']) {
       const name = `inertance-2026-10-${day}-source`;
       const verified = await page.evaluate(async name => {
         const zip = await fetch(`/source/${name}.zip`), sum = await fetch(`/source/${name}.sha256`);
